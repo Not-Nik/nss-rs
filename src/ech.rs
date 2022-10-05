@@ -11,7 +11,8 @@ use crate::p11::{
     self, Item, PrivateKey, PublicKey, SECITEM_FreeItem, SECItem, SECKEYPrivateKey,
     SECKEYPublicKey, Slot,
 };
-use crate::ssl::{PRBool, PRFileDesc};
+use crate::prio::PRFileDesc;
+use crate::prtypes::PRBool;
 use std::convert::TryFrom;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_uint};

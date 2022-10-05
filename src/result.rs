@@ -7,16 +7,17 @@
 use crate::err::{
     nspr, Error, PR_ErrorToName, PR_ErrorToString, PR_GetError, Res, PR_LANGUAGE_I_DEFAULT,
 };
-use crate::ssl;
+use crate::nss_prelude::SECSuccess;
+use crate::SECStatus;
 
 use std::ffi::CStr;
 
-pub fn result(rv: ssl::SECStatus) -> Res<()> {
+pub fn result(rv: SECStatus) -> Res<()> {
     let _ = result_helper(rv, false)?;
     Ok(())
 }
 
-pub fn result_or_blocked(rv: ssl::SECStatus) -> Res<bool> {
+pub fn result_or_blocked(rv: SECStatus) -> Res<bool> {
     result_helper(rv, true)
 }
 
@@ -33,8 +34,8 @@ where
     }
 }
 
-fn result_helper(rv: ssl::SECStatus, allow_blocked: bool) -> Res<bool> {
-    if rv == ssl::_SECStatus_SECSuccess {
+fn result_helper(rv: SECStatus, allow_blocked: bool) -> Res<bool> {
+    if rv == SECSuccess {
         return Ok(false);
     }
 
@@ -90,7 +91,7 @@ mod tests {
 
     #[test]
     fn is_err_zero_code() {
-    // This code doesn't work without initializing NSS first.
+        // This code doesn't work without initializing NSS first.
         fixture_init();
 
         set_error_code(0);

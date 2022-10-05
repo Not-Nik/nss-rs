@@ -10,7 +10,8 @@ use crate::agentio::as_c_void;
 use crate::constants::Epoch;
 use crate::err::Res;
 use crate::p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey};
-use crate::ssl::{PRFileDesc, SSLSecretCallback, SSLSecretDirection};
+use crate::prio::PRFileDesc;
+use crate::ssl::{SSLSecretCallback, SSLSecretDirection};
 
 use std::os::raw::c_void;
 use std::pin::Pin;

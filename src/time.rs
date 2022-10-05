@@ -7,7 +7,9 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use crate::err::{Error, Res};
-use crate::ssl::{PRFileDesc, SSLTimeFunc};
+use crate::nss_prelude::PRInt64;
+use crate::prio::PRFileDesc;
+use crate::ssl::SSLTimeFunc;
 
 use once_cell::sync::OnceCell;
 use std::boxed::Box;

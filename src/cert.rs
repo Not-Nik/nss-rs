@@ -8,9 +8,9 @@ use log::error;
 
 use crate::err::secstatus_to_res;
 use crate::p11::{CERTCertListNode, CERT_GetCertificateDer, CertList, Item, SECItem, SECItemArray};
+use crate::prio::PRFileDesc;
 use crate::ssl::{
-    PRFileDesc, SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps,
-    SSL_PeerStapledOCSPResponses,
+    SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps, SSL_PeerStapledOCSPResponses,
 };
 
 use std::convert::TryFrom;

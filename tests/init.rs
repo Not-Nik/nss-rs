@@ -24,6 +24,7 @@ use nss_sys::init_db;
     clippy::upper_case_acronyms
 )]
 mod nss {
+    use nss_sys::nss_prelude::*;
     include!(concat!(env!("OUT_DIR"), "/nss_init.rs"));
 }
 

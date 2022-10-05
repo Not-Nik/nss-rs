@@ -9,10 +9,11 @@ use crate::constants::{
     Extension, HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS,
 };
 use crate::err::Res;
-use crate::ssl::{
-    PRBool, PRFileDesc, SECFailure, SECStatus, SECSuccess, SSLAlertDescription,
-    SSLExtensionHandler, SSLExtensionWriter, SSLHandshakeType,
-};
+use crate::nss_prelude::{SECFailure, SECSuccess};
+use crate::prio::PRFileDesc;
+use crate::prtypes::PRBool;
+use crate::ssl::{SSLAlertDescription, SSLExtensionHandler, SSLExtensionWriter, SSLHandshakeType};
+use crate::SECStatus;
 
 use std::cell::RefCell;
 use std::convert::TryFrom;

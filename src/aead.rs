@@ -7,8 +7,9 @@
 use crate::constants::{Cipher, Version};
 use crate::err::Res;
 use crate::p11::{PK11SymKey, SymKey};
+use crate::prtypes::{PRUint16, PRUint64, PRUint8};
 use crate::ssl;
-use crate::ssl::{PRUint16, PRUint64, PRUint8, SSLAeadContext};
+use crate::ssl::SSLAeadContext;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
