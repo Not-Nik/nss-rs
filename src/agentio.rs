@@ -8,10 +8,12 @@ use log::trace;
 
 use crate::constants::{ContentType, Epoch};
 use crate::err::{nspr, Error, PR_SetError, Res};
+use crate::nss_prelude::SECSuccess;
 use crate::p11::hex_with_len;
-use crate::prio;
 use crate::selfencrypt::hex;
-use crate::ssl;
+use crate::{prio, prtypes, PRInt64, PRIntn};
+use crate::{ssl, PRUint16, PRUint8};
+use crate::{PRInt32, SECStatus};
 
 use std::cmp::min;
 use std::convert::{TryFrom, TryInto};
@@ -25,9 +27,9 @@ use std::vec::Vec;
 
 // Alias common types.
 type PrFd = *mut prio::PRFileDesc;
-type PrStatus = prio::PRStatus::Type;
-const PR_SUCCESS: PrStatus = prio::PRStatus::PR_SUCCESS;
-const PR_FAILURE: PrStatus = prio::PRStatus::PR_FAILURE;
+type PrStatus = prtypes::PRStatus;
+const PR_SUCCESS: PrStatus = prtypes::PR_SUCCESS;
+const PR_FAILURE: PrStatus = prtypes::PR_FAILURE;
 
 /// Convert a pinned, boxed object into a void pointer.
 pub fn as_c_void<T: Unpin>(pin: &mut Pin<Box<T>>) -> *mut c_void {
@@ -53,7 +55,7 @@ impl Record {
     }
 
     // Shoves this record into the socket, returns true if blocked.
-    pub(crate) fn write(self, fd: *mut ssl::PRFileDesc) -> Res<()> {
+    pub(crate) fn write(self, fd: *mut prio::PRFileDesc) -> Res<()> {
         trace!("write {:?}", self);
         unsafe {
             ssl::SSL_RecordLayerData(
@@ -91,22 +93,22 @@ impl RecordList {
 
     #[allow(clippy::unused_self)]
     unsafe extern "C" fn ingest(
-        _fd: *mut ssl::PRFileDesc,
-        epoch: ssl::PRUint16,
+        _fd: *mut prio::PRFileDesc,
+        epoch: PRUint16,
         ct: ssl::SSLContentType::Type,
-        data: *const ssl::PRUint8,
+        data: *const PRUint8,
         len: c_uint,
         arg: *mut c_void,
-    ) -> ssl::SECStatus {
+    ) -> SECStatus {
         let records = arg.cast::<Self>().as_mut().unwrap();
 
         let slice = std::slice::from_raw_parts(data, len as usize);
         records.append(epoch, ContentType::try_from(ct).unwrap(), slice);
-        ssl::SECSuccess
+        SECSuccess
     }
 
     /// Create a new record list.
-    pub(crate) fn setup(fd: *mut ssl::PRFileDesc) -> Res<Pin<Box<Self>>> {
+    pub(crate) fn setup(fd: *mut prio::PRFileDesc) -> Res<Pin<Box<Self>>> {
         let mut records = Box::pin(Self::default());
         unsafe {
             ssl::SSL_RecordLayerWriteCallback(fd, Some(Self::ingest), as_c_void(&mut records))
@@ -257,7 +259,7 @@ unsafe extern "C" fn agent_close(fd: PrFd) -> PrStatus {
     PR_SUCCESS
 }
 
-unsafe extern "C" fn agent_read(mut fd: PrFd, buf: *mut c_void, amount: prio::PRInt32) -> PrStatus {
+unsafe extern "C" fn agent_read(mut fd: PrFd, buf: *mut c_void, amount: PRInt32) -> PrStatus {
     let io = AgentIo::borrow(&mut fd);
     if let Ok(a) = usize::try_from(amount) {
         match io.input.read_input(buf.cast(), a) {
@@ -272,17 +274,17 @@ unsafe extern "C" fn agent_read(mut fd: PrFd, buf: *mut c_void, amount: prio::PR
 unsafe extern "C" fn agent_recv(
     mut fd: PrFd,
     buf: *mut c_void,
-    amount: prio::PRInt32,
-    flags: prio::PRIntn,
+    amount: PRInt32,
+    flags: PRIntn,
     _timeout: prio::PRIntervalTime,
-) -> prio::PRInt32 {
+) -> PRInt32 {
     let io = AgentIo::borrow(&mut fd);
     if flags != 0 {
         return PR_FAILURE;
     }
     if let Ok(a) = usize::try_from(amount) {
         match io.input.read_input(buf.cast(), a) {
-            Ok(v) => prio::PRInt32::try_from(v).unwrap_or(PR_FAILURE),
+            Ok(v) => PRInt32::try_from(v).unwrap_or(PR_FAILURE),
             Err(_) => PR_FAILURE,
         }
     } else {
@@ -290,11 +292,7 @@ unsafe extern "C" fn agent_recv(
     }
 }
 
-unsafe extern "C" fn agent_write(
-    mut fd: PrFd,
-    buf: *const c_void,
-    amount: prio::PRInt32,
-) -> PrStatus {
+unsafe extern "C" fn agent_write(mut fd: PrFd, buf: *const c_void, amount: PRInt32) -> PrStatus {
     let io = AgentIo::borrow(&mut fd);
     if let Ok(a) = usize::try_from(amount) {
         io.save_output(buf.cast(), a);
@@ -307,10 +305,10 @@ unsafe extern "C" fn agent_write(
 unsafe extern "C" fn agent_send(
     mut fd: PrFd,
     buf: *const c_void,
-    amount: prio::PRInt32,
-    flags: prio::PRIntn,
+    amount: PRInt32,
+    flags: PRIntn,
     _timeout: prio::PRIntervalTime,
-) -> prio::PRInt32 {
+) -> PRInt32 {
     let io = AgentIo::borrow(&mut fd);
 
     if flags != 0 {
@@ -324,12 +322,12 @@ unsafe extern "C" fn agent_send(
     }
 }
 
-unsafe extern "C" fn agent_available(mut fd: PrFd) -> prio::PRInt32 {
+unsafe extern "C" fn agent_available(mut fd: PrFd) -> PRInt32 {
     let io = AgentIo::borrow(&mut fd);
     io.input.available.try_into().unwrap_or(PR_FAILURE)
 }
 
-unsafe extern "C" fn agent_available64(mut fd: PrFd) -> prio::PRInt64 {
+unsafe extern "C" fn agent_available64(mut fd: PrFd) -> PRInt64 {
     let io = AgentIo::borrow(&mut fd);
     io.input
         .available
@@ -341,16 +339,16 @@ unsafe extern "C" fn agent_available64(mut fd: PrFd) -> prio::PRInt64 {
 unsafe extern "C" fn agent_getname(_fd: PrFd, addr: *mut prio::PRNetAddr) -> PrStatus {
     let a = addr.as_mut().unwrap();
     // Cast is safe because prio::PR_AF_INET is 2
-    a.inet.family = prio::PR_AF_INET as prio::PRUint16;
-    a.inet.port = 0;
-    a.inet.ip = 0;
+    a.inet.as_mut().family = prio::PR_AF_INET as PRUint16;
+    a.inet.as_mut().port = 0;
+    a.inet.as_mut().ip = 0;
     PR_SUCCESS
 }
 
 unsafe extern "C" fn agent_getsockopt(_fd: PrFd, opt: *mut prio::PRSocketOptionData) -> PrStatus {
     let o = opt.as_mut().unwrap();
-    if o.option == prio::PRSockOption::PR_SockOpt_Nonblocking {
-        o.value.non_blocking = 1;
+    if o.option == prio::PRSockOption_PR_SockOpt_Nonblocking {
+        *o.value.non_blocking.as_mut() = 1;
         return PR_SUCCESS;
     }
     PR_FAILURE

@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use crate::err::Res;
-use crate::ssl::PRFileDesc;
+use crate::prio::PRFileDesc;
 use crate::time::{Interval, PRTime, Time};
 
 use std::convert::{TryFrom, TryInto};

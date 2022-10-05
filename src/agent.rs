@@ -17,12 +17,15 @@ use crate::constants::{
 use crate::ech;
 use crate::err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res};
 use crate::ext::{ExtensionHandler, ExtensionTracker};
+use crate::nss_prelude::{SECSuccess, SECWouldBlock};
 use crate::p11::{self, hex_with_len, PrivateKey, PublicKey};
 use crate::prio;
+use crate::prtypes::PRBool;
 use crate::replay::AntiReplay;
 use crate::secrets::SecretHolder;
-use crate::ssl::{self, PRBool};
+use crate::ssl;
 use crate::time::{Time, TimeHolder};
+use crate::SECStatus;
 
 use std::cell::RefCell;
 use std::convert::TryFrom;
@@ -93,7 +96,7 @@ impl HandshakeState {
     }
 }
 
-fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
+fn get_alpn(fd: *mut prio::PRFileDesc, pre: bool) -> Res<Option<String>> {
     let mut alpn_state = ssl::SSLNextProtoState::SSL_NEXT_PROTO_NO_SUPPORT;
     let mut chosen = vec![0_u8; 255];
     let mut chosen_len: c_uint = 0;
@@ -144,7 +147,7 @@ macro_rules! preinfo_arg {
 }
 
 impl SecretAgentPreInfo {
-    fn new(fd: *mut ssl::PRFileDesc) -> Res<Self> {
+    fn new(fd: *mut prio::PRFileDesc) -> Res<Self> {
         let mut info: MaybeUninit<ssl::SSLPreliminaryChannelInfo> = MaybeUninit::uninit();
         secstatus_to_res(unsafe {
             ssl::SSL_GetPreliminaryChannelInfo(
@@ -229,7 +232,7 @@ pub struct SecretAgentInfo {
 }
 
 impl SecretAgentInfo {
-    fn new(fd: *mut ssl::PRFileDesc) -> Res<Self> {
+    fn new(fd: *mut prio::PRFileDesc) -> Res<Self> {
         let mut info: MaybeUninit<ssl::SSLChannelInfo> = MaybeUninit::uninit();
         secstatus_to_res(unsafe {
             ssl::SSL_GetChannelInfo(
@@ -288,7 +291,7 @@ impl SecretAgentInfo {
 #[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub struct SecretAgent {
-    fd: *mut ssl::PRFileDesc,
+    fd: *mut prio::PRFileDesc,
     secrets: SecretHolder,
     raw: Option<bool>,
     io: Pin<Box<AgentIo>>,
@@ -336,7 +339,7 @@ impl SecretAgent {
     // minimal, but it means that the two forms need casts to translate
     // between them.  ssl::PRFileDesc is left as an opaque type, as the
     // ssl::SSL_* APIs only need an opaque type.
-    fn create_fd(io: &mut Pin<Box<AgentIo>>) -> Res<*mut ssl::PRFileDesc> {
+    fn create_fd(io: &mut Pin<Box<AgentIo>>) -> Res<*mut prio::PRFileDesc> {
         assert_initialized();
         let label = CString::new("sslwrapper")?;
         let id = unsafe { prio::PR_GetUniqueIdentity(label.as_ptr()) };
@@ -358,19 +361,19 @@ impl SecretAgent {
 
     unsafe extern "C" fn auth_complete_hook(
         arg: *mut c_void,
-        _fd: *mut ssl::PRFileDesc,
-        _check_sig: ssl::PRBool,
-        _is_server: ssl::PRBool,
-    ) -> ssl::SECStatus {
+        _fd: *mut prio::PRFileDesc,
+        _check_sig: PRBool,
+        _is_server: PRBool,
+    ) -> SECStatus {
         let auth_required_ptr = arg.cast::<bool>();
         *auth_required_ptr = true;
         // NSS insists on getting SECWouldBlock here rather than accepting
         // the usual combination of PR_WOULD_BLOCK_ERROR and SECFailure.
-        ssl::_SECStatus_SECWouldBlock
+        SECWouldBlock
     }
 
     unsafe extern "C" fn alert_sent_cb(
-        fd: *const ssl::PRFileDesc,
+        fd: *const prio::PRFileDesc,
         arg: *mut c_void,
         alert: *const ssl::SSLAlert,
     ) {
@@ -406,7 +409,7 @@ impl SecretAgent {
 
         self.now.bind(self.fd)?;
         self.configure()?;
-        secstatus_to_res(unsafe { ssl::SSL_ResetHandshake(self.fd, ssl::PRBool::from(is_server)) })
+        secstatus_to_res(unsafe { ssl::SSL_ResetHandshake(self.fd, PRBool::from(is_server)) })
     }
 
     /// Default configuration.
@@ -445,13 +448,13 @@ impl SecretAgent {
         for i in 0..cipher_count {
             let p = all_ciphers.wrapping_add(i);
             secstatus_to_res(unsafe {
-                ssl::SSL_CipherPrefSet(self.fd, i32::from(*p), ssl::PRBool::from(false))
+                ssl::SSL_CipherPrefSet(self.fd, i32::from(*p), PRBool::from(false))
             })?;
         }
 
         for c in ciphers {
             secstatus_to_res(unsafe {
-                ssl::SSL_CipherPrefSet(self.fd, i32::from(*c), ssl::PRBool::from(true))
+                ssl::SSL_CipherPrefSet(self.fd, i32::from(*c), PRBool::from(true))
             })?;
         }
         Ok(())
@@ -850,11 +853,11 @@ impl Client {
     }
 
     unsafe extern "C" fn resumption_token_cb(
-        fd: *mut ssl::PRFileDesc,
+        fd: *mut prio::PRFileDesc,
         token: *const u8,
         len: c_uint,
         arg: *mut c_void,
-    ) -> ssl::SECStatus {
+    ) -> SECStatus {
         let mut info: MaybeUninit<ssl::SSLResumptionTokenInfo> = MaybeUninit::uninit();
         if ssl::SSL_GetResumptionTokenInfo(
             token,
@@ -865,12 +868,12 @@ impl Client {
         .is_err()
         {
             // Ignore the token.
-            return ssl::SECSuccess;
+            return SECSuccess;
         }
-        let expiration_time = info.assume_init().expirationTime;
+        let expiration_time = info.assume_init_ref().expirationTime;
         if ssl::SSL_DestroyResumptionTokenInfo(info.as_mut_ptr()).is_err() {
             // Ignore the token.
-            return ssl::SECSuccess;
+            return SECSuccess;
         }
         let resumption = arg.cast::<Vec<ResumptionToken>>().as_mut().unwrap();
         let len = usize::try_from(len).unwrap();
@@ -884,7 +887,7 @@ impl Client {
         if let Ok(t) = Time::try_from(expiration_time) {
             resumption.push(ResumptionToken::new(v, *t));
         }
-        ssl::SECSuccess
+        SECSuccess
     }
 
     #[must_use]

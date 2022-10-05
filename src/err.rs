@@ -10,7 +10,8 @@
 use std::os::raw::c_char;
 use std::str::Utf8Error;
 
-use crate::ssl::{SECStatus, SECSuccess};
+use crate::nss_prelude::*;
+use crate::prtypes::*;
 
 include!(concat!(env!("OUT_DIR"), "/nspr_error.rs"));
 mod codes {
@@ -135,7 +136,7 @@ pub fn is_blocked(result: &Res<()>) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::err::{self, is_blocked, secstatus_to_res, Error, PRErrorCode, PR_SetError};
-    use crate::ssl::{SECFailure, SECSuccess};
+    use crate::nss_prelude::{SECFailure, SECSuccess};
     use test_fixture::fixture_init;
 
     fn set_error_code(code: PRErrorCode) {
