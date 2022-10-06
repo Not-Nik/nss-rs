@@ -10,9 +10,10 @@ use crate::constants::{
 };
 use crate::err::{Error, Res};
 use crate::p11::{
-    random, Item, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE,
-    CKM_HKDF_DERIVE, CK_ATTRIBUTE_TYPE, CK_MECHANISM_TYPE,
+    random, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE, CKM_HKDF_DERIVE,
+    CK_ATTRIBUTE_TYPE, CK_MECHANISM_TYPE,
 };
+use crate::SECItemBorrowed;
 
 use std::convert::TryFrom;
 use std::os::raw::{c_char, c_uint};
@@ -70,7 +71,7 @@ pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
             CK_MECHANISM_TYPE::from(CKM_HKDF_DERIVE),
             PK11Origin::PK11_OriginUnwrap,
             CK_ATTRIBUTE_TYPE::from(CKA_DERIVE),
-            &mut Item::wrap(buf),
+            SECItemBorrowed::wrap(buf).as_mut(),
             null_mut(),
         )
     };

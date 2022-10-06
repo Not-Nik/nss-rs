@@ -25,7 +25,7 @@ use crate::Epoch;
 mod nss_ssl {
     use crate::err::PRErrorCode;
     use crate::nss_prelude::*;
-    use crate::p11::{CERTCertList, HpkeAeadId, HpkeKdfId, SECItem, SECItemArray};
+    use crate::p11::{CERTCertList, HpkeAeadId, HpkeKdfId};
     use crate::prio::{PRFileDesc, PRFileInfo, PRFileInfo64, PRIOVec};
     use crate::time::PRTime;
 

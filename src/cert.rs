@@ -7,11 +7,12 @@
 use log::error;
 
 use crate::err::secstatus_to_res;
-use crate::p11::{CERTCertListNode, CERT_GetCertificateDer, CertList, Item, SECItem, SECItemArray};
+use crate::p11::{CERTCertListNode, CERT_GetCertificateDer, CertList};
 use crate::prio::PRFileDesc;
 use crate::ssl::{
     SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps, SSL_PeerStapledOCSPResponses,
 };
+use crate::{SECItem, SECItemArray, SECItemBorrowed};
 
 use std::convert::TryFrom;
 use std::ptr::{addr_of, NonNull};
@@ -100,11 +101,11 @@ impl<'a> Iterator for &'a mut CertificateInfo {
         if self.cursor == CertificateInfo::head(&self.certs) {
             return None;
         }
-        let mut item = Item::make_empty();
+        let mut item = SECItemBorrowed::make_empty();
         let cert = unsafe { *self.cursor }.cert;
-        secstatus_to_res(unsafe { CERT_GetCertificateDer(cert, &mut item) })
+        secstatus_to_res(unsafe { CERT_GetCertificateDer(cert, item.as_mut()) })
             .expect("getting DER from certificate should work");
-        Some(unsafe { std::slice::from_raw_parts(item.data, item.len as usize) })
+        Some(unsafe { std::slice::from_raw_parts(item.as_ref().data, item.as_ref().len as usize) })
     }
 }
 

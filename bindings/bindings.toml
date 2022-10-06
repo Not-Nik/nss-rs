@@ -30,10 +30,17 @@ variables = [
 
 [nss_prelude]
 types = [
+    "SECItem",
+    "SECItemArray",
+    "SECItemStr",
     "SECStatus",
+]
+functions = [
+    "SECITEM_FreeItem",
 ]
 enums = [
     "_SECStatus",
+    "SECItemType",
 ]
 
 [nss_ssl]
@@ -171,8 +178,6 @@ types = [
     "HpkeAeadId",
     "HpkeKdfId",
     "HpkeKemId",
-    "SECItem",
-    "SECItemArray",
 ]
 functions = [
     "CERT_DestroyCertificate",
@@ -197,7 +202,6 @@ functions = [
     "PK11_ImportDataKey",
     "PK11_ReadRawAttribute",
     "PK11_ReferenceSymKey",
-    "SECITEM_FreeItem",
     "SECKEY_CopyPrivateKey",
     "SECKEY_CopyPublicKey",
     "SECKEY_DestroyPrivateKey",
@@ -210,7 +214,6 @@ enums = [
     "HpkeKemId",
     "PK11ObjectType",
     "PK11Origin",
-    "SECItemType",
     "SECOidTag",
 ]
 opaque = [

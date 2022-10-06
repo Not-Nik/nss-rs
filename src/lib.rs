@@ -16,6 +16,8 @@
 mod exp;
 #[macro_use]
 pub mod p11;
+#[macro_use]
+mod util;
 
 #[cfg(not(feature = "fuzzing"))]
 mod aead;
@@ -65,6 +67,7 @@ pub use self::p11::{random, PrivateKey, PublicKey, SymKey};
 pub use self::replay::AntiReplay;
 pub use self::secrets::SecretDirection;
 pub use self::ssl::Opt;
+pub use util::*;
 
 use once_cell::sync::OnceCell;
 
@@ -81,7 +84,7 @@ pub mod nss_prelude {
     pub use _SECStatus::*;
     include!(concat!(env!("OUT_DIR"), "/nss_prelude.rs"));
 }
-pub use nss_prelude::SECStatus;
+pub use nss_prelude::{SECItem, SECItemArray, SECItemType, SECStatus};
 
 #[allow(non_upper_case_globals, clippy::redundant_static_lifetimes)]
 #[allow(clippy::upper_case_acronyms)]

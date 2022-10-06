@@ -7,12 +7,10 @@
 use log::trace;
 
 use crate::err::{ssl::SSL_ERROR_ECH_RETRY_WITH_ECH, Error, Res};
-use crate::p11::{
-    self, Item, PrivateKey, PublicKey, SECITEM_FreeItem, SECItem, SECKEYPrivateKey,
-    SECKEYPublicKey, Slot,
-};
+use crate::p11::{self, PrivateKey, PublicKey, SECKEYPrivateKey, SECKEYPublicKey, Slot};
 use crate::prio::PRFileDesc;
 use crate::prtypes::PRBool;
+use crate::{SECItem, SECItemBorrowed, SECItemMut};
 use std::convert::TryFrom;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_uint};
@@ -65,14 +63,16 @@ pub fn convert_ech_error(fd: *mut PRFileDesc, err: Error) -> Error {
         ..
     } = &err
     {
-        let mut item = Item::make_empty();
-        if unsafe { SSL_GetEchRetryConfigs(fd, &mut item).is_err() } {
+        let mut item = SECItemMut::make_empty();
+        if unsafe { SSL_GetEchRetryConfigs(fd, item.as_mut()).is_err() } {
             return Error::InternalError;
         }
         let buf = unsafe {
-            let slc = std::slice::from_raw_parts(item.data, usize::try_from(item.len).unwrap());
+            let slc = std::slice::from_raw_parts(
+                item.as_ref().data,
+                usize::try_from(item.as_ref().len).unwrap(),
+            );
             let buf = Vec::from(slc);
-            SECITEM_FreeItem(&mut item, PRBool::from(false));
             buf
         };
         Error::EchRetry(buf)
@@ -100,7 +100,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     params.extend_from_slice(oid_slc);
 
     let mut public_ptr: *mut SECKEYPublicKey = null_mut();
-    let mut param_item = Item::wrap(&params);
+    let mut param_item = SECItemBorrowed::wrap(&params);
 
     // If we have tracing on, try to ensure that key data can be read.
     let insensitive_secret_ptr = if log::log_enabled!(log::Level::Trace) {
