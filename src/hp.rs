@@ -9,16 +9,17 @@ use crate::constants::{
 };
 use crate::err::{secstatus_to_res, Error, Res};
 use crate::p11::{
-    Context, Item, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
+    Context, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
     PK11_GetBlockSize, SymKey, CKA_ENCRYPT, CKM_AES_ECB, CKM_CHACHA20, CK_ATTRIBUTE_TYPE,
     CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
 };
+use crate::SECItemBorrowed;
 
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug};
 use std::os::raw::{c_char, c_int, c_uint};
-use std::ptr::{addr_of_mut, null, null_mut};
+use std::ptr::{null, null_mut};
 use std::rc::Rc;
 
 experimental_api!(SSL_HkdfExpandLabelWithMech(
@@ -100,7 +101,7 @@ impl HpKey {
                         mech,
                         CK_ATTRIBUTE_TYPE::from(CKA_ENCRYPT),
                         *key,
-                        &Item::wrap(&ZERO[..0]), // Borrow a zero-length slice of ZERO.
+                        SECItemBorrowed::wrap(&ZERO[..0]).as_ref(), // Borrow a zero-length slice of ZERO.
                     )
                 };
                 let context = Context::from_ptr(context_ptr).or(Err(Error::CipherInitFailure))?;
@@ -166,12 +167,12 @@ impl HpKey {
                     ulNonceBits: 96,
                 };
                 let mut output_len: c_uint = 0;
-                let mut param_item = Item::wrap_struct(&params);
+                let mut param_item = SECItemBorrowed::wrap_struct(&params);
                 secstatus_to_res(unsafe {
                     PK11_Encrypt(
                         **key,
                         CK_MECHANISM_TYPE::from(CKM_CHACHA20),
-                        addr_of_mut!(param_item),
+                        param_item.as_mut() as *mut _,
                         (&mut output[..]).as_mut_ptr(),
                         &mut output_len,
                         c_uint::try_from(output.len())?,
