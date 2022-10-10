@@ -61,12 +61,12 @@ pub use self::ech::{
     encode_config as encode_ech_config, generate_keys as generate_ech_keys, AeadId, KdfId, KemId,
     SymmetricSuite,
 };
-pub use self::err::{Error, PRErrorCode, Res};
 pub use self::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
 pub use self::p11::{random, PrivateKey, PublicKey, SymKey};
 pub use self::replay::AntiReplay;
 pub use self::secrets::SecretDirection;
 pub use self::ssl::Opt;
+pub use err::{secstatus_to_res, Error, IntoResult, PRErrorCode, Res};
 pub use util::*;
 
 use once_cell::sync::OnceCell;
@@ -96,10 +96,6 @@ mod nss {
 
 pub mod prtypes;
 pub use prtypes::*;
-
-fn secstatus_to_res(code: SECStatus) -> Res<()> {
-    crate::err::secstatus_to_res(code as SECStatus)
-}
 
 enum NssLoaded {
     External,
