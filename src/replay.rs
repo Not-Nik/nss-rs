@@ -9,7 +9,6 @@ use crate::prio::PRFileDesc;
 use crate::time::{Interval, PRTime, Time};
 
 use std::convert::{TryFrom, TryInto};
-use std::ops::{Deref, DerefMut};
 use std::os::raw::c_uint;
 use std::ptr::null_mut;
 use std::time::{Duration, Instant};
@@ -67,7 +66,7 @@ impl AntiReplay {
         }?;
 
         Ok(Self {
-            ctx: AntiReplayContext::from_ptr(ctx)?,
+            ctx: unsafe { AntiReplayContext::from_ptr(ctx) }?,
         })
     }
 

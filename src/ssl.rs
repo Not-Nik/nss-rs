@@ -6,6 +6,7 @@
 
 #![allow(
     dead_code,
+    non_camel_case_types,
     non_upper_case_globals,
     non_snake_case,
     clippy::cognitive_complexity,
@@ -25,7 +26,9 @@ use crate::Epoch;
 mod nss_ssl {
     use crate::err::PRErrorCode;
     use crate::nss_prelude::*;
-    use crate::p11::{CERTCertList, HpkeAeadId, HpkeKdfId};
+    use crate::p11::{
+        CERTCertList, CERTCertificateStr, HpkeAeadId, HpkeKdfId, PK11SymKeyStr, SECKEYPrivateKeyStr,
+    };
     use crate::prio::{PRFileDesc, PRFileInfo, PRFileInfo64, PRIOVec};
     use crate::time::PRTime;
 

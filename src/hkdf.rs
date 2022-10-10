@@ -75,7 +75,7 @@ pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
             null_mut(),
         )
     };
-    SymKey::from_ptr(key_ptr)
+    unsafe { SymKey::from_ptr(key_ptr) }
 }
 
 /// Extract a PRK from the given salt and IKM using the algorithm defined in RFC 5869.
@@ -94,7 +94,7 @@ pub fn extract(
         None => null_mut(),
     };
     unsafe { SSL_HkdfExtract(version, cipher, salt_ptr, **ikm, &mut prk) }?;
-    SymKey::from_ptr(prk)
+    unsafe { SymKey::from_ptr(prk) }
 }
 
 /// Expand a PRK using the HKDF-Expand-Label function defined in RFC 8446.
@@ -125,5 +125,5 @@ pub fn expand_label(
             &mut secret,
         )
     }?;
-    SymKey::from_ptr(secret)
+    unsafe { SymKey::from_ptr(secret) }
 }

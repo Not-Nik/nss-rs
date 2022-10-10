@@ -13,11 +13,16 @@
 #![allow(clippy::used_underscore_binding)]
 
 #[macro_use]
+pub mod err;
+#[macro_use]
 mod exp;
 #[macro_use]
-pub mod p11;
-#[macro_use]
 mod util;
+
+pub mod p11;
+mod prio;
+mod ssl;
+pub mod time;
 
 #[cfg(not(feature = "fuzzing"))]
 mod aead;
@@ -31,16 +36,13 @@ mod auth;
 mod cert;
 pub mod constants;
 mod ech;
-mod err;
 pub mod ext;
 pub mod hkdf;
 pub mod hp;
-mod prio;
+
 mod replay;
 mod secrets;
 pub mod selfencrypt;
-mod ssl;
-mod time;
 
 #[cfg(not(feature = "fuzzing"))]
 pub use self::aead::Aead;

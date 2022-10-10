@@ -114,10 +114,6 @@ variables = [
     "ssl_preinfo_.*",
 ]
 opaque = [
-    "CERTCertificate",
-    "PK11SymKey",
-    "SECKEYPrivateKey",
-    "SECKEYPublicKey",
     "SSLExtraServerCertData",
 ]
 
@@ -169,6 +165,7 @@ variables = [
 
 [nss_p11]
 types = [
+    "CERTCertificateStr",
     "CERTCertList",
     "CERTCertListNode",
     "CK_CHACHA20_PARAMS",
@@ -178,6 +175,8 @@ types = [
     "HpkeAeadId",
     "HpkeKdfId",
     "HpkeKemId",
+    "PK11SymKeyStr",
+    "SECKEYPrivateKeyStr",
 ]
 functions = [
     "CERT_DestroyCertificate",
@@ -217,12 +216,9 @@ enums = [
     "SECOidTag",
 ]
 opaque = [
-    "CERTCertificate",
-    "PK11Context",
-    "PK11SlotInfo",
-    "PK11SymKey",
-    "SECKEYPrivateKey",
-    "SECKEYPublicKey",
+    "PK11ContextStr",
+    "PK11SlotInfoStr",
+    "SECKEYPublicKeyStr",
 ]
 variables = [
     "CKA_DERIVE",

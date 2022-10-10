@@ -31,10 +31,12 @@ pub struct CertificateInfo {
 
 fn peer_certificate_chain(fd: *mut PRFileDesc) -> Option<(CertList, *const CERTCertListNode)> {
     let chain = unsafe { SSL_PeerCertificateChain(fd) };
-    CertList::from_ptr(chain.cast()).ok().map(|certs| {
-        let cursor = CertificateInfo::head(&certs);
-        (certs, cursor)
-    })
+    unsafe {
+        CertList::from_ptr(chain.cast()).ok().map(|certs| {
+            let cursor = CertificateInfo::head(&certs);
+            (certs, cursor)
+        })
+    }
 }
 
 // As explained in rfc6961, an OCSPResponseList can have at most
