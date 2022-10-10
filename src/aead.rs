@@ -13,7 +13,7 @@ use crate::ssl::SSLAeadContext;
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 use std::os::raw::{c_char, c_uint};
 use std::ptr::null_mut;
 

@@ -1047,13 +1047,13 @@ impl Server {
         for n in certificates {
             let c = CString::new(n.as_ref())?;
             let cert_ptr = unsafe { p11::PK11_FindCertFromNickname(c.as_ptr(), null_mut()) };
-            let cert = if let Ok(c) = p11::Certificate::from_ptr(cert_ptr) {
+            let cert = if let Ok(c) = unsafe { p11::Certificate::from_ptr(cert_ptr) } {
                 c
             } else {
                 return Err(Error::CertificateLoading);
             };
             let key_ptr = unsafe { p11::PK11_FindKeyByAnyCert(*cert.deref(), null_mut()) };
-            let key = if let Ok(k) = p11::PrivateKey::from_ptr(key_ptr) {
+            let key = if let Ok(k) = unsafe { p11::PrivateKey::from_ptr(key_ptr) } {
                 k
             } else {
                 return Err(Error::CertificateLoading);
