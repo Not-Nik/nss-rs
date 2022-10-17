@@ -153,7 +153,7 @@ impl HpKey {
                         output.as_mut_ptr(),
                         &mut output_len,
                         c_int::try_from(output.len())?,
-                        (&sample[..Self::SAMPLE_SIZE]).as_ptr().cast(),
+                        sample[..Self::SAMPLE_SIZE].as_ptr().cast(),
                         c_int::try_from(Self::SAMPLE_SIZE).unwrap(),
                     )
                 })?;
@@ -165,7 +165,7 @@ impl HpKey {
                 let params: CK_CHACHA20_PARAMS = CK_CHACHA20_PARAMS {
                     pBlockCounter: sample.as_ptr() as *mut u8,
                     blockCounterBits: 32,
-                    pNonce: (&sample[4..Self::SAMPLE_SIZE]).as_ptr() as *mut _,
+                    pNonce: sample[4..Self::SAMPLE_SIZE].as_ptr() as *mut _,
                     ulNonceBits: 96,
                 };
                 let mut output_len: c_uint = 0;
@@ -174,11 +174,11 @@ impl HpKey {
                     PK11_Encrypt(
                         **key,
                         CK_MECHANISM_TYPE::from(CKM_CHACHA20),
-                        param_item.as_mut() as *mut _,
-                        (&mut output[..]).as_mut_ptr(),
+                        std::ptr::from_mut(param_item.as_mut()),
+                        output[..].as_mut_ptr(),
                         &mut output_len,
                         c_uint::try_from(output.len())?,
-                        (&output[..]).as_ptr(),
+                        output[..].as_ptr(),
                         c_uint::try_from(output.len())?,
                     )
                 })?;
