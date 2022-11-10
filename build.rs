@@ -74,7 +74,7 @@ fn setup_clang() {
         PathBuf::from(dir.trim())
     } else {
         eprintln!("warning: Building without a gecko setup is not likely to work.");
-        eprintln!("         A working libclang is needed to build nss-sys.");
+        eprintln!("         A working libclang is needed to build nss-gk-api.");
         eprintln!("         Either LIBCLANG_PATH or MOZBUILD_STATE_PATH needs to be set.");
         eprintln!();
         eprintln!("    We recommend checking out https://github.com/mozilla/gecko-dev");

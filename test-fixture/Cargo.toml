@@ -8,10 +8,10 @@ license = "MIT/Apache-2.0"
 
 [dependencies]
 log = {version = "0.4.0", default-features = false}
-nss-sys = { path = "../" }
+nss-gk-api = { path = "../" }
 
 [features]
-bench = ["nss-sys/bench"]
+bench = ["nss-gk-api/bench"]
 disable-random = []
 
 [package.metadata.cargo-machete]

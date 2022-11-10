@@ -2,9 +2,9 @@
 #![warn(clippy::pedantic)]
 #![cfg(not(feature = "fuzzing"))]
 
-use nss_sys::constants::{Cipher, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
-use nss_sys::hkdf;
-use nss_sys::Aead;
+use nss_gk_api::constants::{Cipher, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
+use nss_gk_api::hkdf;
+use nss_gk_api::Aead;
 
 use test_fixture::fixture_init;
 

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use log::info;
-use nss_sys::{
+use nss_gk_api::{
     AntiReplay, AuthenticationStatus, Client, HandshakeState, RecordList, Res, ResumptionToken,
     SecretAgent, Server, ZeroRttCheckResult, ZeroRttChecker,
 };

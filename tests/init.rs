@@ -8,11 +8,11 @@
 // a different version of init_db.  That causes explosions as they get
 // different versions of the Once instance they use and they initialize NSS
 // twice, probably likely in parallel.  That doesn't work out well.
-use nss_sys::assert_initialized;
+use nss_gk_api::assert_initialized;
 #[cfg(nss_nodb)]
-use nss_sys::init;
+use nss_gk_api::init;
 #[cfg(not(nss_nodb))]
-use nss_sys::init_db;
+use nss_gk_api::init_db;
 
 // Pull in the NSS internals so that we can ask NSS if it thinks that
 // it is properly initialized.
@@ -24,7 +24,7 @@ use nss_sys::init_db;
     clippy::upper_case_acronyms
 )]
 mod nss {
-    use nss_sys::nss_prelude::*;
+    use nss_gk_api::nss_prelude::*;
     include!(concat!(env!("OUT_DIR"), "/nss_init.rs"));
 }
 
