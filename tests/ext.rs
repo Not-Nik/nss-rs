@@ -1,9 +1,9 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-use nss_sys::constants::{HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS};
-use nss_sys::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
-use nss_sys::{Client, Server};
+use nss_gk_api::constants::{HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS};
+use nss_gk_api::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
+use nss_gk_api::{Client, Server};
 use std::cell::RefCell;
 use std::rc::Rc;
 use test_fixture::fixture_init;

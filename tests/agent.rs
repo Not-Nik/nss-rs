@@ -1,7 +1,7 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-use nss_sys::{
+use nss_gk_api::{
     generate_ech_keys, AuthenticationStatus, Client, Error, HandshakeState, SecretAgentPreInfo,
     Server, ZeroRttCheckResult, ZeroRttChecker, TLS_AES_128_GCM_SHA256,
     TLS_CHACHA20_POLY1305_SHA256, TLS_GRP_EC_SECP256R1, TLS_VERSION_1_3,

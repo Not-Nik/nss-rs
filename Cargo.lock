@@ -132,7 +132,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nss-sys"
+name = "nss-gk-api"
 version = "0.2.0"
 dependencies = [
  "bindgen",
@@ -272,7 +272,7 @@ name = "test-fixture"
 version = "0.1.0"
 dependencies = [
  "log",
- "nss-sys",
+ "nss-gk-api",
 ]
 
 [[package]]
