@@ -5,6 +5,7 @@
 // except according to those terms.
 
 use log::trace;
+use pkcs11_bindings::{CKF_DERIVE, CKM_EC_KEY_PAIR_GEN};
 
 use crate::err::{ssl::SSL_ERROR_ECH_RETRY_WITH_ECH, Error, Res};
 use crate::p11::{self, PrivateKey, PublicKey, SECKEYPrivateKey, SECKEYPublicKey, Slot};
@@ -107,12 +108,12 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
         unsafe {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
-                p11::CK_MECHANISM_TYPE::from(p11::CKM_EC_KEY_PAIR_GEN),
+                p11::CK_MECHANISM_TYPE::from(CKM_EC_KEY_PAIR_GEN),
                 addr_of_mut!(param_item).cast(),
                 &mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_INSENSITIVE | p11::PK11_ATTR_PUBLIC,
-                p11::CK_FLAGS::from(p11::CKF_DERIVE),
-                p11::CK_FLAGS::from(p11::CKF_DERIVE),
+                p11::CK_FLAGS::from(CKF_DERIVE),
+                p11::CK_FLAGS::from(CKF_DERIVE),
                 null_mut(),
             )
         }
@@ -124,12 +125,12 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
         unsafe {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
-                p11::CK_MECHANISM_TYPE::from(p11::CKM_EC_KEY_PAIR_GEN),
+                p11::CK_MECHANISM_TYPE::from(CKM_EC_KEY_PAIR_GEN),
                 addr_of_mut!(param_item).cast(),
                 &mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_SENSITIVE | p11::PK11_ATTR_PRIVATE,
-                p11::CK_FLAGS::from(p11::CKF_DERIVE),
-                p11::CK_FLAGS::from(p11::CKF_DERIVE),
+                p11::CK_FLAGS::from(CKF_DERIVE),
+                p11::CK_FLAGS::from(CKF_DERIVE),
                 null_mut(),
             )
         }
