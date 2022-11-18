@@ -4,14 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use pkcs11_bindings::{CKA_ENCRYPT, CKM_AES_ECB, CKM_CHACHA20};
+
 use crate::constants::{
     Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
 };
 use crate::err::{secstatus_to_res, Error, Res};
 use crate::p11::{
     Context, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
-    PK11_GetBlockSize, SymKey, CKA_ENCRYPT, CKM_AES_ECB, CKM_CHACHA20, CK_ATTRIBUTE_TYPE,
-    CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
+    PK11_GetBlockSize, SymKey, CK_ATTRIBUTE_TYPE, CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
 };
 use crate::SECItemBorrowed;
 

@@ -139,6 +139,7 @@ dependencies = [
  "log",
  "mozbuild",
  "once_cell",
+ "pkcs11-bindings",
  "serde",
  "serde_derive",
  "test-fixture",
@@ -156,6 +157,15 @@ name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
+
+[[package]]
+name = "pkcs11-bindings"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77f2b11de4fec7f1e085891d4a4bf16a8b1beb49978837a80d4e9e705b99295c"
+dependencies = [
+ "bindgen",
+]
 
 [[package]]
 name = "proc-macro2"
