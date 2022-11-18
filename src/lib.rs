@@ -99,6 +99,12 @@ mod nss {
 pub mod prtypes;
 pub use prtypes::*;
 
+// Shadow these bindgen created values to correct their type.
+#[expect(clippy::cast_possible_wrap)]
+pub const PR_FALSE: PRBool = prtypes::PR_FALSE as PRBool;
+#[expect(clippy::cast_possible_wrap)]
+pub const PR_TRUE: PRBool = prtypes::PR_TRUE as PRBool;
+
 enum NssLoaded {
     External,
     NoDb,
