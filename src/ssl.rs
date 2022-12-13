@@ -40,6 +40,15 @@ mod SSLOption {
     include!(concat!(env!("OUT_DIR"), "/nss_sslopt.rs"));
 }
 
+// I clearly don't understand how bindgen operates.
+#[allow(clippy::empty_enum)]
+pub enum PLArenaPool {}
+
+// Remap some constants.
+pub const SECSuccess: SECStatus = _SECStatus_SECSuccess;
+pub const SECFailure: SECStatus = _SECStatus_SECFailure;
+const SSL_ENABLE_GREASE: u32 = 42;
+
 #[derive(Debug, Copy, Clone)]
 pub enum Opt {
     Locking,
@@ -53,6 +62,7 @@ pub enum Opt {
     Tls13CompatMode,
     HelloDowngradeCheck,
     SuppressEndOfEarlyData,
+    Grease,
 }
 
 impl Opt {
@@ -71,6 +81,7 @@ impl Opt {
             Self::Tls13CompatMode => SSLOption::SSL_ENABLE_TLS13_COMPAT_MODE,
             Self::HelloDowngradeCheck => SSLOption::SSL_ENABLE_HELLO_DOWNGRADE_CHECK,
             Self::SuppressEndOfEarlyData => SSLOption::SSL_SUPPRESS_END_OF_EARLY_DATA,
+            Self::Grease => SSL_ENABLE_GREASE,
         };
         i as PRInt32
     }
