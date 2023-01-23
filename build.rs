@@ -375,8 +375,8 @@ fn setup_for_gecko() -> Vec<String> {
     let mut flags = fs::read_to_string(flags_path)
         .expect("Failed to read extra-bindgen-flags file")
         .split_whitespace()
-        .map(std::borrow::ToOwned::to_owned)
-        .collect::<Vec<String>>();
+        .map(String::from)
+        .collect::<Vec<_>>();
 
     flags.push(String::from("-include"));
     flags.push(
