@@ -4,14 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::err::Res;
-use crate::prio::PRFileDesc;
-use crate::time::{Interval, PRTime, Time};
-
-use std::convert::{TryFrom, TryInto};
-use std::os::raw::c_uint;
-use std::ptr::null_mut;
-use std::time::{Duration, Instant};
+use crate::{
+    err::Res,
+    prio::PRFileDesc,
+    time::{Interval, PRTime, Time},
+};
+use std::{
+    convert::{TryFrom, TryInto},
+    os::raw::c_uint,
+    ptr::null_mut,
+    time::{Duration, Instant},
+};
 
 // This is an opaque struct in NSS.
 #[allow(clippy::upper_case_acronyms)]

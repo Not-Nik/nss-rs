@@ -4,22 +4,26 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::agentio::as_c_void;
-use crate::constants::{
-    Extension, HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS,
+use crate::{
+    agentio::as_c_void,
+    constants::{Extension, HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS},
+    err::Res,
+    prio::PRFileDesc,
+    prtypes::PRBool,
+    ssl::{
+        SECFailure, SECSuccess, SSLAlertDescription, SSLExtensionHandler, SSLExtensionWriter,
+        SSLHandshakeType,
+    },
+    SECStatus,
 };
-use crate::err::Res;
-use crate::nss_prelude::{SECFailure, SECSuccess};
-use crate::prio::PRFileDesc;
-use crate::prtypes::PRBool;
-use crate::ssl::{SSLAlertDescription, SSLExtensionHandler, SSLExtensionWriter, SSLHandshakeType};
-use crate::SECStatus;
 
-use std::cell::RefCell;
-use std::convert::TryFrom;
-use std::os::raw::{c_uint, c_void};
-use std::pin::Pin;
-use std::rc::Rc;
+use std::{
+    cell::RefCell,
+    convert::TryFrom,
+    os::raw::{c_uint, c_void},
+    pin::Pin,
+    rc::Rc,
+};
 
 experimental_api!(SSL_InstallExtensionHooks(
     fd: *mut PRFileDesc,

@@ -6,38 +6,43 @@
 
 use log::{debug, info, trace, warn};
 
-pub use crate::agentio::{as_c_void, Record, RecordList};
-use crate::agentio::{AgentIo, METHODS};
-use crate::assert_initialized;
-use crate::auth::AuthenticationStatus;
-pub use crate::cert::CertificateInfo;
-use crate::constants::{
-    Alert, Cipher, Epoch, Extension, Group, SignatureScheme, Version, TLS_VERSION_1_3,
+pub use crate::{
+    agentio::{as_c_void, Record, RecordList},
+    cert::CertificateInfo,
 };
-use crate::ech;
-use crate::err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res};
-use crate::ext::{ExtensionHandler, ExtensionTracker};
-use crate::nss_prelude::{SECSuccess, SECWouldBlock};
-use crate::p11::{self, hex_with_len, PrivateKey, PublicKey};
-use crate::prio;
-use crate::prtypes::PRBool;
-use crate::replay::AntiReplay;
-use crate::secrets::SecretHolder;
-use crate::ssl;
-use crate::time::{Time, TimeHolder};
-use crate::SECStatus;
-
-use std::cell::RefCell;
-use std::convert::TryFrom;
-use std::ffi::{CStr, CString};
-use std::fmt::Write;
-use std::mem::{self, MaybeUninit};
-use std::ops::{Deref, DerefMut};
-use std::os::raw::{c_uint, c_void};
-use std::pin::Pin;
-use std::ptr::{null, null_mut};
-use std::rc::Rc;
-use std::time::Instant;
+use crate::{
+    agentio::{AgentIo, METHODS},
+    assert_initialized,
+    auth::AuthenticationStatus,
+    constants::{
+        Alert, Cipher, Epoch, Extension, Group, SignatureScheme, Version, TLS_VERSION_1_3,
+    },
+    ech,
+    err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res},
+    ext::{ExtensionHandler, ExtensionTracker},
+    nss_prelude::SECWouldBlock,
+    p11::{self, hex_with_len, PrivateKey, PublicKey},
+    prio,
+    prtypes::PRBool,
+    replay::AntiReplay,
+    secrets::SecretHolder,
+    ssl,
+    time::{Time, TimeHolder},
+    SECStatus,
+};
+use std::{
+    cell::RefCell,
+    convert::TryFrom,
+    ffi::{CStr, CString},
+    fmt::Write,
+    mem::{self, MaybeUninit},
+    ops::{Deref, DerefMut},
+    os::raw::{c_uint, c_void},
+    pin::Pin,
+    ptr::{null, null_mut},
+    rc::Rc,
+    time::Instant,
+};
 
 /// The maximum number of tickets to remember for a given connection.
 const MAX_TICKETS: usize = 4;
@@ -872,12 +877,12 @@ impl Client {
         .is_err()
         {
             // Ignore the token.
-            return SECSuccess;
+            return ssl::SECSuccess;
         }
         let expiration_time = info.assume_init_ref().expirationTime;
         if ssl::SSL_DestroyResumptionTokenInfo(info.as_mut_ptr()).is_err() {
             // Ignore the token.
-            return SECSuccess;
+            return ssl::SECSuccess;
         }
         let resumption = arg.cast::<Vec<ResumptionToken>>().as_mut().unwrap();
         let len = usize::try_from(len).unwrap();
@@ -891,7 +896,7 @@ impl Client {
         if let Ok(t) = Time::try_from(expiration_time) {
             resumption.push(ResumptionToken::new(v, *t));
         }
-        SECSuccess
+        ssl::SECSuccess
     }
 
     #[must_use]

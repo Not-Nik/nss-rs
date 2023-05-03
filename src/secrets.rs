@@ -6,15 +6,16 @@
 
 use log::debug;
 
-use crate::agentio::as_c_void;
-use crate::constants::Epoch;
-use crate::err::Res;
-use crate::p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey};
-use crate::prio::PRFileDesc;
-use crate::ssl::{SSLSecretCallback, SSLSecretDirection};
+use crate::{
+    agentio::as_c_void,
+    constants::Epoch,
+    err::Res,
+    p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey},
+    prio::PRFileDesc,
+    ssl::{SSLSecretCallback, SSLSecretDirection},
+};
 
-use std::os::raw::c_void;
-use std::pin::Pin;
+use std::{os::raw::c_void, pin::Pin};
 
 experimental_api!(SSL_SecretCallback(
     fd: *mut PRFileDesc,
