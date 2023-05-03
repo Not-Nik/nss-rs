@@ -4,16 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::err::{
-    nspr, Error, PR_ErrorToName, PR_ErrorToString, PR_GetError, Res, PR_LANGUAGE_I_DEFAULT,
-};
 use crate::nss_prelude::SECSuccess;
 use crate::SECStatus;
+use crate::{
+    err::{nspr, Error, PR_ErrorToName, PR_ErrorToString, PR_GetError, Res, PR_LANGUAGE_I_DEFAULT},
+    ssl,
+};
 
 use std::ffi::CStr;
 
-pub fn result(rv: SECStatus) -> Res<()> {
-    let _ = result_helper(rv, false)?;
+pub fn result(rv: ssl::SECStatus) -> Res<()> {
+    _ = result_helper(rv, false)?;
     Ok(())
 }
 
@@ -55,8 +56,10 @@ fn result_helper(rv: SECStatus, allow_blocked: bool) -> Res<bool> {
 #[cfg(test)]
 mod tests {
     use super::{result, result_or_blocked};
-    use crate::err::{self, nspr, Error, PRErrorCode, PR_SetError};
-    use crate::ssl;
+    use crate::{
+        err::{self, nspr, Error, PRErrorCode, PR_SetError},
+        ssl,
+    };
     use test_fixture::fixture_init;
 
     fn set_error_code(code: PRErrorCode) {
