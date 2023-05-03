@@ -4,18 +4,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::constants::{Cipher, Version};
-use crate::err::Res;
-use crate::p11::{PK11SymKey, SymKey};
-use crate::prtypes::{PRUint16, PRUint64, PRUint8};
-use crate::ssl;
-use crate::ssl::SSLAeadContext;
+use crate::{
+    constants::{Cipher, Version},
+    err::Res,
+    experimental_api,
+    p11::{PK11SymKey, SymKey},
+    prtypes::{PRUint16, PRUint64, PRUint8},
+    scoped_ptr,
+    ssl::{self, SSLAeadContext},
+};
 
-use std::convert::{TryFrom, TryInto};
-use std::fmt;
-use std::ops::Deref;
-use std::os::raw::{c_char, c_uint};
-use std::ptr::null_mut;
+use std::{
+    convert::{TryFrom, TryInto},
+    fmt,
+    ops::Deref,
+    os::raw::{c_char, c_uint},
+    ptr::null_mut,
+};
 
 experimental_api!(SSL_MakeAead(
     version: PRUint16,

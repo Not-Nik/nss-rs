@@ -19,6 +19,7 @@ use crate::prtypes::*;
 /// `PK11SymKey` is internally reference counted so its pointer is like an `Arc`.)
 ///
 /// Named "scoped" because that is what NSS calls its `unique_ptr` typedefs.
+#[macro_export]
 macro_rules! scoped_ptr {
     ($name:ident, $target:ty, $dtor:path) => {
         pub struct $name {

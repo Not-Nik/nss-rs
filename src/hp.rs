@@ -6,22 +6,26 @@
 
 use pkcs11_bindings::{CKA_ENCRYPT, CKM_AES_ECB, CKM_CHACHA20};
 
-use crate::constants::{
-    Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
-};
-use crate::err::{secstatus_to_res, Error, Res};
-use crate::p11::{
-    Context, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
-    PK11_GetBlockSize, SymKey, CK_ATTRIBUTE_TYPE, CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
-};
 use crate::SECItemBorrowed;
-
-use std::cell::RefCell;
-use std::convert::TryFrom;
-use std::fmt::{self, Debug};
-use std::os::raw::{c_char, c_int, c_uint};
-use std::ptr::{null, null_mut};
-use std::rc::Rc;
+use crate::{
+    constants::{
+        Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
+        TLS_CHACHA20_POLY1305_SHA256,
+    },
+    err::{secstatus_to_res, Error, Res},
+    p11::{
+        Context, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
+        PK11_GetBlockSize, SymKey, CK_ATTRIBUTE_TYPE, CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
+    },
+};
+use std::{
+    cell::RefCell,
+    convert::TryFrom,
+    fmt::{self, Debug},
+    os::raw::{c_char, c_int, c_uint},
+    ptr::{null, null_mut},
+    rc::Rc,
+};
 
 experimental_api!(SSL_HkdfExpandLabelWithMech(
     version: Version,
