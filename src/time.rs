@@ -6,18 +6,23 @@
 
 #![allow(clippy::upper_case_acronyms)]
 
-use crate::err::{Error, Res};
-use crate::nss_prelude::PRInt64;
-use crate::prio::PRFileDesc;
-use crate::ssl::SSLTimeFunc;
-
 use once_cell::sync::OnceCell;
-use std::boxed::Box;
-use std::convert::{TryFrom, TryInto};
-use std::ops::Deref;
-use std::os::raw::c_void;
-use std::pin::Pin;
-use std::time::{Duration, Instant};
+
+use crate::{
+    err::{Error, Res},
+    nss_prelude::PRInt64,
+    prio::PRFileDesc,
+    ssl::SSLTimeFunc,
+};
+
+use std::{
+    boxed::Box,
+    convert::{TryFrom, TryInto},
+    ops::Deref,
+    os::raw::c_void,
+    pin::Pin,
+    time::{Duration, Instant},
+};
 
 include!(concat!(env!("OUT_DIR"), "/nspr_time.rs"));
 
@@ -74,7 +79,7 @@ fn get_base() -> &'static TimeZero {
 }
 
 pub fn init() {
-    let _ = get_base();
+    _ = get_base();
 }
 
 /// Time wraps Instant and provides conversion functions into `PRTime`.
@@ -214,8 +219,10 @@ impl Default for TimeHolder {
 mod test {
     use super::{get_base, init, Interval, PRTime, Time};
     use crate::err::Res;
-    use std::convert::{TryFrom, TryInto};
-    use std::time::{Duration, Instant};
+    use std::{
+        convert::{TryFrom as _, TryInto as _},
+        time::{Duration, Instant},
+    };
 
     #[test]
     fn convert_stable() {
