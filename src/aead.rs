@@ -17,7 +17,6 @@ use crate::{
 use std::{
     convert::{TryFrom, TryInto},
     fmt,
-    ops::Deref,
     os::raw::{c_char, c_uint},
     ptr::null_mut,
 };
@@ -119,7 +118,7 @@ impl RealAead {
         let mut l: c_uint = 0;
         unsafe {
             SSL_AeadEncrypt(
-                *self.ctx.deref(),
+                *self.ctx,
                 count,
                 aad.as_ptr(),
                 c_uint::try_from(aad.len())?,
@@ -151,7 +150,7 @@ impl RealAead {
         let mut l: c_uint = 0;
         unsafe {
             SSL_AeadDecrypt(
-                *self.ctx.deref(),
+                *self.ctx,
                 count,
                 aad.as_ptr(),
                 c_uint::try_from(aad.len())?,
