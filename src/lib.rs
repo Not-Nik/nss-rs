@@ -77,7 +77,7 @@ use std::{
     ptr::null,
 };
 
-const MINIMUM_NSS_VERSION: &str = "3.74";
+const MINIMUM_NSS_VERSION: &str = "3.97";
 
 #[expect(non_snake_case)]
 #[expect(non_upper_case_globals)]
