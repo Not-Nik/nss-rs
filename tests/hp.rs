@@ -1,6 +1,8 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
+use std::mem;
+
 use nss_gk_api::{
     constants::{
         Cipher, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
@@ -9,7 +11,6 @@ use nss_gk_api::{
     hkdf,
     hp::HpKey,
 };
-use std::mem;
 use test_fixture::fixture_init;
 
 fn make_hp(cipher: Cipher) -> HpKey {

@@ -2,8 +2,12 @@
 #![warn(clippy::pedantic)]
 #![cfg(not(feature = "fuzzing"))]
 
-use nss_gk_api::constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
-use nss_gk_api::{init, selfencrypt::SelfEncrypt, Error};
+use nss_gk_api::{
+    constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
+    init,
+    selfencrypt::SelfEncrypt,
+    Error,
+};
 
 #[test]
 fn se_create() {

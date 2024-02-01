@@ -18,19 +18,35 @@
 
 use std::os::raw::{c_uint, c_void};
 
-use crate::err::{secstatus_to_res, Res};
-use crate::nss_prelude::*;
-use crate::prio::PRFileDesc;
-use crate::Epoch;
+use crate::{
+    err::{secstatus_to_res, Res},
+    nss_prelude::*,
+    prio::PRFileDesc,
+    Epoch,
+};
 
 mod nss_ssl {
-    use crate::err::PRErrorCode;
-    use crate::nss_prelude::*;
-    use crate::p11::{
-        CERTCertList, CERTCertificateStr, HpkeAeadId, HpkeKdfId, PK11SymKeyStr, SECKEYPrivateKeyStr,
+    #![allow(
+        dead_code,
+        non_upper_case_globals,
+        non_snake_case,
+        nonstandard_style,
+        clippy::all,
+        clippy::nursery,
+        clippy::pedantic,
+        clippy::restriction,
+        reason = "For included bindgen code."
+    )]
+    use crate::{
+        err::PRErrorCode,
+        nss_prelude::*,
+        p11::{
+            CERTCertList, CERTCertificateStr, HpkeAeadId, HpkeKdfId, PK11SymKeyStr,
+            SECKEYPrivateKeyStr,
+        },
+        prio::{PRFileDesc, PRFileInfo, PRFileInfo64, PRIOVec},
+        time::PRTime,
     };
-    use crate::prio::{PRFileDesc, PRFileInfo, PRFileInfo64, PRIOVec};
-    use crate::time::PRTime;
 
     include!(concat!(env!("OUT_DIR"), "/nss_ssl.rs"));
 }

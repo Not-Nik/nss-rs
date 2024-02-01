@@ -4,16 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{fmt::Write as _, io::Write as _, mem};
+
 use log::{info, trace};
 
-use crate::constants::{Cipher, Version};
-use crate::err::{Error, Res};
-use crate::p11::{random, SymKey};
-use crate::{hkdf, Aead};
-
-use std::fmt::Write as _;
-use std::io::Write as _;
-use std::mem;
+use crate::{
+    constants::{Cipher, Version},
+    err::{Error, Res},
+    hkdf,
+    p11::{random, SymKey},
+    Aead,
+};
 
 #[must_use]
 pub fn hex<A: AsRef<[u8]>>(buf: A) -> String {
@@ -38,6 +39,7 @@ impl SelfEncrypt {
     const SALT_LENGTH: usize = 16;
 
     /// # Errors
+    ///
     /// Failure to generate a new HKDF key using NSS results in an error.
     pub fn new(version: Version, cipher: Cipher) -> Res<Self> {
         let key = hkdf::generate_key(version, cipher)?;
@@ -57,9 +59,11 @@ impl SelfEncrypt {
         Aead::new(false, self.version, self.cipher, &secret, "neqo self")
     }
 
-    /// Rotate keys.  This causes any previous key that is being held to be replaced by the current key.
+    /// Rotate keys.  This causes any previous key that is being held to be replaced by the current
+    /// key.
     ///
     /// # Errors
+    ///
     /// Failure to generate a new HKDF key using NSS results in an error.
     pub fn rotate(&mut self) -> Res<()> {
         let new_key = hkdf::generate_key(self.version, self.cipher)?;
@@ -76,6 +80,7 @@ impl SelfEncrypt {
     /// caller is responsible for carrying the AAD as appropriate.
     ///
     /// # Errors
+    ///
     /// Failure to protect using NSS AEAD APIs produces an error.
     pub fn seal(&self, aad: &[u8], plaintext: &[u8]) -> Res<Vec<u8>> {
         // Format is:
@@ -132,6 +137,7 @@ impl SelfEncrypt {
     /// Open the protected `ciphertext`.
     ///
     /// # Errors
+    ///
     /// Returns an error when the self-encrypted object is invalid;
     /// when the keys have been rotated; or when NSS fails.
     #[allow(clippy::similar_names)] // aad is similar to aead

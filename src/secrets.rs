@@ -4,6 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{os::raw::c_void, pin::Pin};
+
 use log::debug;
 
 use crate::{
@@ -14,8 +16,6 @@ use crate::{
     prio::PRFileDesc,
     ssl::{SSLSecretCallback, SSLSecretDirection},
 };
-
-use std::{os::raw::c_void, pin::Pin};
 
 experimental_api!(SSL_SecretCallback(
     fd: *mut PRFileDesc,

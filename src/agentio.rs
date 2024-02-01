@@ -4,26 +4,28 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    cmp::min,
+    convert::{TryFrom, TryInto},
+    fmt, mem,
+    ops::Deref,
+    os::raw::{c_uint, c_void},
+    pin::Pin,
+    ptr::{null, null_mut},
+    vec::Vec,
+};
+
 use log::trace;
 
-use crate::constants::{ContentType, Epoch};
-use crate::err::{nspr, Error, PR_SetError, Res};
-use crate::nss_prelude::SECSuccess;
-use crate::p11::hex_with_len;
-use crate::selfencrypt::hex;
-use crate::{prio, prtypes, PRInt64, PRIntn};
-use crate::{ssl, PRUint16, PRUint8};
-use crate::{PRInt32, SECStatus};
-
-use std::cmp::min;
-use std::convert::{TryFrom, TryInto};
-use std::fmt;
-use std::mem;
-use std::ops::Deref;
-use std::os::raw::{c_uint, c_void};
-use std::pin::Pin;
-use std::ptr::{null, null_mut};
-use std::vec::Vec;
+use crate::{
+    constants::{ContentType, Epoch},
+    err::{nspr, Error, PR_SetError, Res},
+    nss_prelude::SECSuccess,
+    p11::hex_with_len,
+    prio, prtypes,
+    selfencrypt::hex,
+    ssl, PRInt32, PRInt64, PRIntn, PRUint16, PRUint8, SECStatus,
+};
 
 // Alias common types.
 type PrFd = *mut prio::PRFileDesc;
