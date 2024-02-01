@@ -39,15 +39,20 @@ pub mod selfencrypt;
 mod ssl;
 pub mod time;
 
+use std::{
+    ffi::CString,
+    path::{Path, PathBuf},
+    ptr::null,
+};
+
+use once_cell::sync::OnceCell;
+
 #[cfg(not(feature = "fuzzing"))]
 pub use self::aead::RealAead as Aead;
-
-#[cfg(feature = "fuzzing")]
-pub use self::aead_fuzzing::FuzzingAead as Aead;
-
 #[cfg(feature = "fuzzing")]
 pub use self::aead::RealAead;
-
+#[cfg(feature = "fuzzing")]
+pub use self::aead_fuzzing::FuzzingAead as Aead;
 pub use self::{
     agent::{
         Agent, AllowZeroRtt, Client, HandshakeState, Record, RecordList, ResumptionToken,
@@ -69,21 +74,14 @@ pub use self::{
     util::*,
 };
 
-use once_cell::sync::OnceCell;
-
-use std::{
-    ffi::CString,
-    path::{Path, PathBuf},
-    ptr::null,
-};
-
 const MINIMUM_NSS_VERSION: &str = "3.97";
 
 #[expect(non_snake_case)]
 #[expect(non_upper_case_globals)]
 pub mod nss_prelude {
-    pub use crate::prtypes::*;
     pub use _SECStatus::*;
+
+    pub use crate::prtypes::*;
     include!(concat!(env!("OUT_DIR"), "/nss_prelude.rs"));
 }
 pub use nss_prelude::{SECItem, SECItemArray, SECItemType, SECStatus};
@@ -137,8 +135,11 @@ fn version_check() {
     );
 }
 
-/// Initialize NSS.  This only executes the initialization routines once, so if there is any chance that
+/// Initialize NSS.  This only executes the initialization routines once, so if there is any chance
+/// that
+///
 /// # Panics
+///
 /// When NSS initialization fails.
 pub fn init() {
     // Set time zero.
@@ -169,7 +170,9 @@ fn enable_ssl_trace() {
 }
 
 /// Initialize with a database.
+///
 /// # Panics
+///
 /// If NSS cannot be initialized.
 pub fn init_db<P: Into<PathBuf>>(dir: P) {
     time::init();
@@ -210,6 +213,7 @@ pub fn init_db<P: Into<PathBuf>>(dir: P) {
 }
 
 /// # Panics
+///
 /// If NSS isn't initialized.
 pub fn assert_initialized() {
     INITIALIZED

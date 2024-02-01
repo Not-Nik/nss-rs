@@ -4,9 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    cell::RefCell,
+    convert::TryFrom as _,
+    fmt::{self, Debug},
+    os::raw::{c_char, c_int, c_uint},
+    ptr::{null, null_mut},
+    rc::Rc,
+};
+
 use pkcs11_bindings::{CKA_ENCRYPT, CKM_AES_ECB, CKM_CHACHA20};
 
-use crate::SECItemBorrowed;
 use crate::{
     constants::{
         Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
@@ -17,14 +25,7 @@ use crate::{
         Context, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
         PK11_GetBlockSize, SymKey, CK_ATTRIBUTE_TYPE, CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
     },
-};
-use std::{
-    cell::RefCell,
-    convert::TryFrom,
-    fmt::{self, Debug},
-    os::raw::{c_char, c_int, c_uint},
-    ptr::{null, null_mut},
-    rc::Rc,
+    SECItemBorrowed,
 };
 
 experimental_api!(SSL_HkdfExpandLabelWithMech(
@@ -64,8 +65,11 @@ impl HpKey {
     /// QUIC-specific API for extracting a header-protection key.
     ///
     /// # Errors
+    ///
     /// Errors if HKDF fails or if the label is too long to fit in a `c_uint`.
+    ///
     /// # Panics
+    ///
     /// When `cipher` is not known to this code.
     #[allow(clippy::cast_sign_loss)] // Cast for PK11_GetBlockSize is safe.
     pub fn extract(version: Version, cipher: Cipher, prk: &SymKey, label: &str) -> Res<Self> {
@@ -109,7 +113,8 @@ impl HpKey {
                         mech,
                         CK_ATTRIBUTE_TYPE::from(CKA_ENCRYPT),
                         *key,
-                        SECItemBorrowed::wrap(&ZERO[..0]).as_ref(), // Borrow a zero-length slice of ZERO.
+                        SECItemBorrowed::wrap(&ZERO[..0]).as_ref(), /* Borrow a zero-length
+                                                                     * slice of ZERO. */
                     )
                 };
                 let context =
@@ -144,9 +149,12 @@ impl HpKey {
     /// Generate a header protection mask for QUIC.
     ///
     /// # Errors
+    ///
     /// An error is returned if the NSS functions fail; a sample of the
     /// wrong size is the obvious cause.
+    ///
     /// # Panics
+    ///
     /// When the mechanism for our key is not supported.
     pub fn mask(&self, sample: &[u8]) -> Res<Vec<u8>> {
         let mut output = vec![0_u8; self.block_size()];

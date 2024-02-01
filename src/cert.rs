@@ -4,20 +4,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::{
+    convert::TryFrom,
+    ptr::{addr_of, NonNull},
+    slice,
+};
+
 use log::error;
 
-use crate::err::secstatus_to_res;
-use crate::p11::{CERTCertListNode, CERT_GetCertificateDer, CertList};
-use crate::prio::PRFileDesc;
-use crate::ssl::{
-    SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps, SSL_PeerStapledOCSPResponses,
+use crate::{
+    err::secstatus_to_res,
+    p11::{CERTCertListNode, CERT_GetCertificateDer, CertList},
+    prio::PRFileDesc,
+    ssl::{SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps, SSL_PeerStapledOCSPResponses},
+    SECItem, SECItemArray, SECItemBorrowed,
 };
-use crate::{SECItem, SECItemArray, SECItemBorrowed};
-
-use std::convert::TryFrom;
-use std::ptr::{addr_of, NonNull};
-
-use std::slice;
 
 pub struct CertificateInfo {
     certs: CertList,

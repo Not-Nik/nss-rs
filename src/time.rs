@@ -6,15 +6,6 @@
 
 #![allow(clippy::upper_case_acronyms)]
 
-use once_cell::sync::OnceCell;
-
-use crate::{
-    err::{Error, Res},
-    nss_prelude::PRInt64,
-    prio::PRFileDesc,
-    ssl::SSLTimeFunc,
-};
-
 use std::{
     boxed::Box,
     convert::{TryFrom, TryInto},
@@ -22,6 +13,15 @@ use std::{
     os::raw::c_void,
     pin::Pin,
     time::{Duration, Instant},
+};
+
+use once_cell::sync::OnceCell;
+
+use crate::{
+    err::{Error, Res},
+    nss_prelude::PRInt64,
+    prio::PRFileDesc,
+    ssl::SSLTimeFunc,
 };
 
 include!(concat!(env!("OUT_DIR"), "/nspr_time.rs"));
@@ -217,12 +217,13 @@ impl Default for TimeHolder {
 
 #[cfg(test)]
 mod test {
-    use super::{get_base, init, Interval, PRTime, Time};
-    use crate::err::Res;
     use std::{
         convert::{TryFrom as _, TryInto as _},
         time::{Duration, Instant},
     };
+
+    use super::{get_base, init, Interval, PRTime, Time};
+    use crate::err::Res;
 
     #[test]
     fn convert_stable() {

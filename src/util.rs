@@ -4,14 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-use std::marker::PhantomData;
-use std::mem;
-use std::os::raw::c_uint;
-use std::ptr::null_mut;
+use std::{convert::TryFrom, marker::PhantomData, mem, os::raw::c_uint, ptr::null_mut};
 
-use crate::nss_prelude::*;
-use crate::prtypes::*;
+use crate::{nss_prelude::*, prtypes::*};
 
 /// Implement a smart pointer for NSS objects.
 ///

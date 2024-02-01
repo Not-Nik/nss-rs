@@ -9,13 +9,17 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use crate::err::{secstatus_to_res, Error, Res};
-use crate::util::SECItemMut;
+use std::{
+    convert::TryFrom,
+    os::raw::{c_int, c_uint},
+};
 
 use pkcs11_bindings::CKA_VALUE;
 
-use std::convert::TryFrom;
-use std::os::raw::{c_int, c_uint};
+use crate::{
+    err::{secstatus_to_res, Error, Res},
+    util::SECItemMut,
+};
 
 #[must_use]
 pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
@@ -33,13 +37,13 @@ pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
 #[allow(clippy::unreadable_literal)]
 #[allow(unknown_lints, clippy::borrow_as_ptr)]
 mod nss_p11 {
-    use crate::nss_prelude::*;
-    use crate::prtypes::*;
+    use crate::{nss_prelude::*, prtypes::*};
     include!(concat!(env!("OUT_DIR"), "/nss_p11.rs"));
 }
 
-use crate::prtypes::*;
 pub use nss_p11::*;
+
+use crate::prtypes::*;
 
 // Shadow these bindgen created values to correct their type.
 pub const SHA256_LENGTH: usize = nss_p11::SHA256_LENGTH as usize;
@@ -61,8 +65,11 @@ impl PublicKey {
     /// Get the HPKE serialization of the public key.
     ///
     /// # Errors
+    ///
     /// When the key cannot be exported, which can be because the type is not supported.
+    ///
     /// # Panics
+    ///
     /// When keys are too large to fit in `c_uint/usize`.  So only on programming error.
     pub fn key_data(&self) -> Res<Vec<u8>> {
         let mut buf = vec![0; 100];
@@ -97,9 +104,12 @@ impl PrivateKey {
     /// Get the bits of the private key.
     ///
     /// # Errors
+    ///
     /// When the key cannot be exported, which can be because the type is not supported
     /// or because the key data cannot be extracted from the PKCS#11 module.
+    ///
     /// # Panics
+    ///
     /// When the values are too large to fit.  So never.
     pub fn key_data(&self) -> Res<Vec<u8>> {
         let mut key_item = SECItemMut::make_empty();
@@ -142,6 +152,7 @@ impl SymKey {
     /// You really don't want to use this.
     ///
     /// # Errors
+    ///
     /// Internal errors in case of failures in NSS.
     pub fn as_bytes(&self) -> Res<&[u8]> {
         secstatus_to_res(unsafe { PK11_ExtractKeyValue(**self) })?;
@@ -171,7 +182,9 @@ unsafe fn destroy_pk11_context(ctxt: *mut PK11Context) {
 scoped_ptr!(Context, PK11Context, destroy_pk11_context);
 
 /// Generate a randomized buffer.
+///
 /// # Panics
+///
 /// When `size` is too large or NSS fails.
 #[must_use]
 pub fn random(size: usize) -> Vec<u8> {
@@ -187,8 +200,9 @@ impl_into_result!(SECOidData);
 
 #[cfg(test)]
 mod test {
-    use super::random;
     use test_fixture::fixture_init;
+
+    use super::random;
 
     #[test]
     fn randomness() {
