@@ -11,15 +11,17 @@ repository = "https://github.com/mozilla/nss-gk-api"
 
 [dependencies]
 once_cell = "1"
-log = {version = "~0.4.17", default-features = false}
+# Sync with https://searchfox.org/mozilla-central/source/Cargo.lock 2024-02-08
+log = {version = "0.4", default-features = false}
 pkcs11-bindings = ">= 0.1.3"
 
 [build-dependencies]
-bindgen = { version = "0.69.1", default-features = false, features = ["runtime"] }
+# Sync with https://searchfox.org/mozilla-central/source/Cargo.lock 2024-02-08
+bindgen = { version = "0.69", default-features = false, features = ["runtime"] }
 mozbuild = { version = "0.1", optional = true }
-serde = "1.0.195"
-serde_derive = "1.0.195"
-toml = "0.5.11"
+serde = "1.0"
+serde_derive = "1.0"
+toml = "0.5"
 
 [dev-dependencies]
 test-fixture = {path = "test-fixture"}
