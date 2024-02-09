@@ -67,7 +67,7 @@ pub use self::{
     },
     err::{secstatus_to_res, Error, IntoResult, PRErrorCode, Res},
     ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult},
-    p11::{random, PrivateKey, PublicKey, SymKey},
+    p11::{random, randomize, PrivateKey, PublicKey, SymKey},
     replay::AntiReplay,
     secrets::SecretDirection,
     ssl::Opt,
