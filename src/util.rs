@@ -6,7 +6,7 @@
 
 use std::{convert::TryFrom, marker::PhantomData, mem, os::raw::c_uint, ptr::null_mut};
 
-use crate::{nss_prelude::*, prtypes::*};
+use crate::{nss_prelude::*, null_safe_slice, prtypes::*};
 
 /// Implement a smart pointer for NSS objects.
 ///
@@ -87,7 +87,10 @@ impl SECItem {
         // Note: `from_raw_parts` requires non-null `data` even for zero-length
         // slices.
         if self.len != 0 {
-            std::slice::from_raw_parts(self.data, usize::try_from(self.len).unwrap())
+            null_safe_slice(
+                self.data,
+                usize::try_from(self.len).expect("Buffer too long"),
+            )
         } else {
             &[]
         }
@@ -110,8 +113,7 @@ impl ScopedSECItem {
         let b = self.ptr.as_ref().expect("Null pointer");
         // Sanity check the type, as some types don't count bytes in `Item::len`.
         assert_eq!(b.type_, SECItemType::siBuffer);
-        let slc =
-            std::slice::from_raw_parts(b.data, usize::try_from(b.len).expect("Buffer too long"));
+        let slc = null_safe_slice(b.data, usize::try_from(b.len).expect("Buffer too long"));
         Vec::from(slc)
     }
 }

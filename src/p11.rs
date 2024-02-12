@@ -19,6 +19,7 @@ use pkcs11_bindings::CKA_VALUE;
 
 use crate::{
     err::{secstatus_to_res, Error, Res},
+    nss_prelude::SECITEM_FreeItem,
     util::SECItemMut,
 };
 
@@ -44,11 +45,7 @@ mod nss_p11 {
 
 pub use nss_p11::*;
 
-use crate::prtypes::*;
-
-// Shadow these bindgen created values to correct their type.
-pub const SHA256_LENGTH: usize = nss_p11::SHA256_LENGTH as usize;
-pub const AES_BLOCK_SIZE: usize = nss_p11::AES_BLOCK_SIZE as usize;
+use crate::{null_safe_slice, prtypes::PRBool};
 
 scoped_ptr!(Certificate, CERTCertificate, CERT_DestroyCertificate);
 scoped_ptr!(CertList, CERTCertList, CERT_DestroyCertList);
@@ -122,9 +119,18 @@ impl PrivateKey {
                 key_item.as_mut(),
             )
         })?;
-        Ok(key_item.as_slice().to_owned())
+        let slc = unsafe { null_safe_slice(key_item.as_ref().data, key_item.as_ref().len) };
+        let key = Vec::from(slc);
+        // The data that `key_item` refers to needs to be freed, but we can't
+        // use the scoped `Item` implementation.  This is OK as long as nothing
+        // panics between `PK11_ReadRawAttribute` succeeding and here.
+        unsafe {
+            SECITEM_FreeItem(key_item.as_mut(), PRBool::from(false));
+        }
+        Ok(key)
     }
 }
+unsafe impl Send for PrivateKey {}
 
 impl std::fmt::Debug for PrivateKey {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -161,7 +167,7 @@ impl SymKey {
         // This is accessing a value attached to the key, so we can treat this as a borrow.
         match unsafe { key_item.as_mut() } {
             None => Err(Error::InternalError),
-            Some(key) => Ok(unsafe { std::slice::from_raw_parts(key.data, key.len as usize) }),
+            Some(key) => Ok(unsafe { null_safe_slice(key.data, key.len) }),
         }
     }
 }
