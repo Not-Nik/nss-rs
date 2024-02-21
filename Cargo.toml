@@ -2,7 +2,7 @@
 name = "nss-gk-api"
 version = "0.3.0"
 authors = ["Martin Thomson <mt@lowentropy.net>", "Andy Leiserson <aleiserson@mozilla.com>", "John M. Schanck <jschanck@mozilla.com>"]
-edition = "2018"
+edition = "2021"
 rust-version = "1.70.0"
 build = "build.rs"
 license = "MIT/Apache-2.0"
