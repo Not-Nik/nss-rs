@@ -37,7 +37,7 @@ const fn hash_alg_to_oid(alg: &HashAlgorithm) -> SECOidTag::Type {
     }
 }
 
-fn hash_alg_to_hash_len(alg: &HashAlgorithm) -> usize {
+pub fn hash_alg_to_hash_len(alg: &HashAlgorithm) -> usize {
     match alg {
         HashAlgorithm::SHA2_256 => p11::SHA256_LENGTH as usize,
         HashAlgorithm::SHA2_384 => p11::SHA384_LENGTH as usize,
