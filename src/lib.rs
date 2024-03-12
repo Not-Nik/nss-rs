@@ -30,6 +30,7 @@ pub mod hkdf;
 pub mod hp;
 
 pub mod hash;
+pub mod hmac;
 pub mod p11;
 mod prio;
 mod replay;
