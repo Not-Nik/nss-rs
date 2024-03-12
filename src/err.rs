@@ -83,6 +83,7 @@ pub enum Error {
     String,
     TimeTravel,
     UnsupportedCipher,
+    UnsupportedHash,
     UnsupportedVersion,
 }
 

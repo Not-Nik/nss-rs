@@ -250,6 +250,11 @@ variables = [
     "PK11_ATTR_SESSION",
     "SEC_ASN1_OBJECT_ID",
     "SHA256_LENGTH",
+    "SHA384_LENGTH",
+    "SHA512_LENGTH",
+    "SHA3_256_LENGTH",
+    "SHA3_384_LENGTH",
+    "SHA3_512_LENGTH",
 ]
 
 [nspr_err]

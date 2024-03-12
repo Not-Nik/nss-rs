@@ -28,8 +28,9 @@ mod exp;
 pub mod ext;
 pub mod hkdf;
 pub mod hp;
-#[macro_use]
-mod p11;
+
+pub mod hash;
+pub mod p11;
 mod prio;
 mod replay;
 mod secrets;

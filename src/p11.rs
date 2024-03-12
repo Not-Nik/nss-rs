@@ -39,6 +39,7 @@ pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
     ret
 }
 
+#[allow(unfulfilled_lint_expectations)]
 #[expect(
     dead_code,
     non_snake_case,
