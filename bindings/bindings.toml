@@ -170,6 +170,9 @@ variables = [
 [nss_p11]
 types = [
     "CERTCertificateStr",
+    "CK_BBOOL",
+    # "CK_ULONG", // Uncommenting this breaks nss_ssl bindings
+    "CK_HKDF_PARAMS",
     "CERTCertList",
     "CERTCertListNode",
     "CK_CHACHA20_PARAMS",
@@ -187,6 +190,7 @@ functions = [
     "PK11_CipherOp",
     "PK11_CreateContextBySymKey",
     "PK11_Decrypt",
+    "PK11_Derive",
     "PK11_DestroyContext",
     "PK11_DigestOp",
     "PK11_DigestFinal",
@@ -255,6 +259,15 @@ variables = [
     "SHA3_256_LENGTH",
     "SHA3_384_LENGTH",
     "SHA3_512_LENGTH",
+    "CKA_DERIVE",
+    "CK_INVALID_HANDLE",
+    "CKF_HKDF_SALT_NULL",
+    "CKF_HKDF_SALT_DATA",
+    "CKM_HKDF_DERIVE",
+    "CKM_HKDF_DATA",
+    "CKM_SHA256",
+    "CKM_SHA384",
+    "CKM_SHA512",
 ]
 
 [nspr_err]

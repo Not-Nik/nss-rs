@@ -53,7 +53,7 @@ fn extract(cipher: Cipher, expected: &[u8]) {
     let (salt, ikm) = import_keys(cipher);
     let prk = hkdf::extract(TLS_VERSION_1_3, cipher, Some(&salt), &ikm)
         .expect("HKDF Extract should work");
-    let raw_prk = prk.as_bytes().expect("key should have bytes");
+    let raw_prk = prk.key_data().expect("key should have bytes");
     assert_eq!(raw_prk, expected);
 }
 
@@ -88,7 +88,7 @@ fn derive_secret(cipher: Cipher, expected: &[u8]) {
     let (prk, _) = import_keys(cipher);
     let secret = hkdf::expand_label(TLS_VERSION_1_3, cipher, &prk, &[], "master secret")
         .expect("HKDF-Expand-Label should work");
-    let raw_secret = secret.as_bytes().expect("key should have bytes");
+    let raw_secret = secret.key_data().expect("key should have bytes");
     assert_eq!(raw_secret, expected);
 }
 
@@ -129,7 +129,7 @@ fn expand_label(cipher: Cipher, expected: &[u8]) {
         "master secret",
     )
     .expect("HKDF-Expand-Label should work");
-    let raw_secret = secret.as_bytes().expect("key should have bytes");
+    let raw_secret = secret.key_data().expect("key should have bytes");
     assert_eq!(raw_secret, expected);
 }
 

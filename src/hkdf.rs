@@ -4,25 +4,30 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![allow(non_camel_case_types)]
+
 use std::{
-    convert::TryFrom,
-    os::raw::{c_char, c_uint},
+    convert::TryFrom as _,
+    marker::PhantomData,
+    os::raw::{c_char, c_int, c_uint},
     ptr::null_mut,
 };
 
-use pkcs11_bindings::{CKA_DERIVE, CKM_HKDF_DERIVE};
+use pkcs11_bindings::{CKA_DERIVE, CKA_SIGN, CKM_HKDF_DERIVE, CKM_HKDF_KEY_GEN, CK_ULONG};
 
 use crate::{
     constants::{
         Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
         TLS_CHACHA20_POLY1305_SHA256, TLS_VERSION_1_3,
     },
-    err::{Error, Res},
+    err::Res,
     p11::{
-        random, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CK_ATTRIBUTE_TYPE,
+        self, random, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKF_HKDF_SALT_DATA,
+        CKF_HKDF_SALT_NULL, CKM_HKDF_DATA, CK_ATTRIBUTE_TYPE, CK_BBOOL, CK_INVALID_HANDLE,
         CK_MECHANISM_TYPE,
     },
-    SECItemBorrowed,
+    ssl::CK_OBJECT_HANDLE,
+    Error, SECItem, SECItemBorrowed, SECItemType,
 };
 
 experimental_api!(SSL_HkdfExtract(
@@ -42,6 +47,64 @@ experimental_api!(SSL_HkdfExpandLabel(
     label_len: c_uint,
     secret: *mut *mut PK11SymKey,
 ));
+
+#[derive(Clone, Copy, Debug)]
+
+pub enum HkdfError {
+    InvalidPrkLength,
+    InvalidLength,
+    InternalError,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum HkdfAlgorithm {
+    HKDF_SHA2_256,
+    HKDF_SHA2_384,
+    HKDF_SHA2_512,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum KeyMechanism {
+    Hkdf,
+}
+
+impl KeyMechanism {
+    fn mech(self) -> CK_MECHANISM_TYPE {
+        CK_MECHANISM_TYPE::from(match self {
+            Self::Hkdf => CKM_HKDF_DERIVE,
+        })
+    }
+
+    const fn len(self) -> usize {
+        match self {
+            Self::Hkdf => 0, // Let the underlying module decide.
+        }
+    }
+}
+#[derive(Clone, Copy, Debug)]
+
+pub(crate) struct ParamItem<'a, T> {
+    item: SECItem,
+    marker: PhantomData<&'a T>,
+}
+
+impl<'a, T: Sized + 'a> ParamItem<'a, T> {
+    pub fn new(v: &'a mut T) -> Result<Self, HkdfError> {
+        let item = SECItem {
+            type_: SECItemType::siBuffer,
+            data: std::ptr::from_mut::<T>(v).cast::<u8>(),
+            len: c_uint::try_from(size_of::<T>()).map_err(|_| HkdfError::InvalidLength)?,
+        };
+        Ok(Self {
+            item,
+            marker: PhantomData,
+        })
+    }
+
+    pub fn ptr(&mut self) -> *mut SECItem {
+        std::ptr::addr_of_mut!(self.item)
+    }
+}
 
 const MAX_KEY_SIZE: usize = 48;
 const fn key_size(version: Version, cipher: Cipher) -> Res<usize> {
@@ -141,4 +204,129 @@ pub fn expand_label(
         )
     }?;
     unsafe { SymKey::from_ptr(secret) }
+}
+
+pub struct Hkdf {
+    kdf: HkdfAlgorithm,
+}
+
+impl Hkdf {
+    #[must_use]
+    pub const fn new(kdf: HkdfAlgorithm) -> Self {
+        Self { kdf }
+    }
+
+    #[expect(clippy::unused_self)]
+    pub fn import_secret(&self, ikm: &[u8]) -> Result<SymKey, HkdfError> {
+        let slot = p11::Slot::internal().map_err(|_| HkdfError::InternalError)?;
+        let ptr = unsafe {
+            p11::PK11_ImportSymKey(
+                *slot,
+                CK_MECHANISM_TYPE::from(CKM_HKDF_KEY_GEN),
+                p11::PK11Origin::PK11_OriginUnwrap,
+                p11::CK_ATTRIBUTE_TYPE::from(CKA_SIGN),
+                // &mut p11::Item::wrap(ikm),
+                ikm.as_ptr() as *mut _,
+                null_mut(),
+            )
+        };
+        let s = unsafe { SymKey::from_ptr(ptr).map_err(|_| HkdfError::InternalError)? };
+        Ok(s)
+    }
+
+    fn mech(&self) -> CK_MECHANISM_TYPE {
+        CK_MECHANISM_TYPE::from(match self.kdf {
+            HkdfAlgorithm::HKDF_SHA2_256 => p11::CKM_SHA256,
+            HkdfAlgorithm::HKDF_SHA2_384 => p11::CKM_SHA384,
+            HkdfAlgorithm::HKDF_SHA2_512 => p11::CKM_SHA512,
+        })
+    }
+
+    pub fn extract(&self, salt: &[u8], ikm: &SymKey) -> Result<SymKey, HkdfError> {
+        let salt_type = if salt.is_empty() {
+            CKF_HKDF_SALT_NULL
+        } else {
+            CKF_HKDF_SALT_DATA
+        };
+        let mut params = p11::CK_HKDF_PARAMS {
+            bExtract: CK_BBOOL::from(true),
+            bExpand: CK_BBOOL::from(false),
+            prfHashMechanism: self.mech(),
+            ulSaltType: CK_ULONG::from(salt_type),
+            pSalt: salt.as_ptr().cast_mut(), // const-cast = bad API
+            ulSaltLen: CK_ULONG::try_from(salt.len()).map_err(|_| HkdfError::InvalidLength)?,
+            hSaltKey: CK_OBJECT_HANDLE::from(CK_INVALID_HANDLE),
+            pInfo: null_mut(),
+            ulInfoLen: 0,
+        };
+        let mut params_item = ParamItem::new(&mut params)?;
+        let ptr = unsafe {
+            p11::PK11_Derive(
+                **ikm,
+                CK_MECHANISM_TYPE::from(CKM_HKDF_DERIVE),
+                params_item.ptr(),
+                CK_MECHANISM_TYPE::from(CKM_HKDF_DERIVE),
+                CK_MECHANISM_TYPE::from(CKA_DERIVE),
+                0,
+            )
+        };
+
+        let prk = unsafe { SymKey::from_ptr(ptr) }.map_err(|_| HkdfError::InternalError)?;
+        Ok(prk)
+    }
+
+    // NB: `info` must outlive the returned value.
+    fn expand_params(&self, info: &[u8]) -> p11::CK_HKDF_PARAMS {
+        p11::CK_HKDF_PARAMS {
+            bExtract: CK_BBOOL::from(false),
+            bExpand: CK_BBOOL::from(true),
+            prfHashMechanism: self.mech(),
+            ulSaltType: CK_ULONG::from(CKF_HKDF_SALT_NULL),
+            pSalt: null_mut(),
+            ulSaltLen: 0,
+            hSaltKey: CK_OBJECT_HANDLE::from(CK_INVALID_HANDLE),
+            pInfo: info.as_ptr().cast_mut(), // const-cast = bad API
+            ulInfoLen: CK_ULONG::try_from(info.len()).expect("Integer overflow"),
+        }
+    }
+
+    pub fn expand_key(
+        &self,
+        prk: &SymKey,
+        info: &[u8],
+        key_mech: KeyMechanism,
+    ) -> Result<SymKey, HkdfError> {
+        let mut params = self.expand_params(info);
+        let mut params_item = ParamItem::new(&mut params)?;
+        let ptr = unsafe {
+            p11::PK11_Derive(
+                **prk,
+                CK_MECHANISM_TYPE::from(CKM_HKDF_DERIVE),
+                params_item.ptr(),
+                key_mech.mech(),
+                CK_MECHANISM_TYPE::from(CKA_DERIVE),
+                c_int::try_from(key_mech.len()).map_err(|_| HkdfError::InvalidLength)?,
+            )
+        };
+        let okm = unsafe { SymKey::from_ptr(ptr) }.map_err(|_| HkdfError::InternalError)?;
+        Ok(okm)
+    }
+
+    pub fn expand_data(&self, prk: &SymKey, info: &[u8], len: usize) -> Result<Vec<u8>, HkdfError> {
+        let mut params = self.expand_params(info);
+        let mut params_item = ParamItem::new(&mut params)?;
+        let ptr = unsafe {
+            p11::PK11_Derive(
+                **prk,
+                CK_MECHANISM_TYPE::from(CKM_HKDF_DATA),
+                params_item.ptr(),
+                CK_MECHANISM_TYPE::from(CKM_HKDF_DERIVE),
+                CK_MECHANISM_TYPE::from(CKA_DERIVE),
+                c_int::try_from(len).map_err(|_| HkdfError::InvalidLength)?,
+            )
+        };
+        let k = unsafe { SymKey::from_ptr(ptr) }.map_err(|_| HkdfError::InternalError)?;
+        let r = Vec::from(k.key_data().map_err(|_| HkdfError::InternalError)?);
+        Ok(r)
+    }
 }
