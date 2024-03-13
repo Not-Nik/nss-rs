@@ -39,15 +39,6 @@ pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
     ret
 }
 
-#[allow(unfulfilled_lint_expectations)]
-#[expect(
-    dead_code,
-    non_snake_case,
-    non_upper_case_globals,
-    non_camel_case_types,
-    clippy::unreadable_literal,
-    reason = "For included bindgen code."
-)]
 mod nss_p11 {
     #![allow(
         non_snake_case,
@@ -183,7 +174,7 @@ impl SymKey {
     /// # Errors
     ///
     /// Internal errors in case of failures in NSS.
-    pub fn as_bytes(&self) -> Res<&[u8]> {
+    pub fn key_data(&self) -> Res<&[u8]> {
         secstatus_to_res(unsafe { PK11_ExtractKeyValue(**self) })?;
 
         let key_item = unsafe { PK11_GetKeyData(**self) };
@@ -197,7 +188,7 @@ impl SymKey {
 
 impl Debug for SymKey {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if let Ok(b) = self.as_bytes() {
+        if let Ok(b) = self.key_data() {
             write!(f, "SymKey {}", hex_with_len(b))
         } else {
             write!(f, "Opaque SymKey")
