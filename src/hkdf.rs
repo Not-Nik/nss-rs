@@ -220,15 +220,17 @@ impl Hkdf {
     pub fn import_secret(&self, ikm: &[u8]) -> Result<SymKey, HkdfError> {
         crate::init().map_err(|_| HkdfError::InternalError)?;
 
-        let slot = p11::Slot::internal().map_err(|_| HkdfError::InternalError)?;
+        let slot = Slot::internal().map_err(|_| HkdfError::InternalError)?;
+        let ikm_item = SECItemBorrowed::wrap(ikm).map_err(|_| HkdfError::InternalError)?;
+        let ikm_item_ptr = std::ptr::from_ref(ikm_item.as_ref()).cast_mut();
+
         let ptr = unsafe {
             p11::PK11_ImportSymKey(
                 *slot,
                 CK_MECHANISM_TYPE::from(CKM_HKDF_KEY_GEN),
-                p11::PK11Origin::PK11_OriginUnwrap,
-                p11::CK_ATTRIBUTE_TYPE::from(CKA_SIGN),
-                // &mut p11::Item::wrap(ikm),
-                ikm.as_ptr() as *mut _,
+                PK11Origin::PK11_OriginUnwrap,
+                CK_ATTRIBUTE_TYPE::from(CKA_SIGN),
+                ikm_item_ptr,
                 null_mut(),
             )
         };
