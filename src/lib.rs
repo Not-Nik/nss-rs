@@ -72,7 +72,8 @@ pub use self::{
     util::*,
 };
 
-const MINIMUM_NSS_VERSION: &str = "3.97";
+mod min_version;
+use min_version::MINIMUM_NSS_VERSION;
 
 #[expect(non_snake_case)]
 #[expect(non_upper_case_globals)]
