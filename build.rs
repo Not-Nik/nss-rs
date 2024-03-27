@@ -6,13 +6,20 @@
 
 use std::{
     collections::{HashMap, HashSet},
-    env, fs,
+    env,
+    error::Error,
+    fs,
     path::{Path, PathBuf},
     process::Command,
 };
 
 use bindgen::Builder;
+use semver::{Version, VersionReq};
 use serde_derive::Deserialize;
+
+#[path = "src/min_version.rs"]
+mod min_version;
+use min_version::MINIMUM_NSS_VERSION;
 
 const BINDINGS_DIR: &str = "bindings";
 const BINDINGS_CONFIG: &str = "bindings.toml";
@@ -90,7 +97,7 @@ fn setup_clang() {
     }
 }
 
-fn nss_dir() -> PathBuf {
+fn nss_dir() -> String {
     let dir = if let Ok(dir) = env::var("NSS_DIR") {
         let path = PathBuf::from(dir.trim());
         assert!(
@@ -124,10 +131,10 @@ fn nss_dir() -> PathBuf {
         }
         dir
     };
-    assert!(dir.is_dir(), "NSS_DIR {dir:?} doesn't exist");
+    assert!(dir.is_dir(), "NSS_DIR {} doesn't exist", dir.display());
     // Note that this returns a relative path because UNC
     // paths on windows cause certain tools to explode.
-    dir
+    dir.to_string_lossy().to_string()
 }
 
 fn get_bash() -> PathBuf {
@@ -144,14 +151,14 @@ fn get_bash() -> PathBuf {
     }
 }
 
-fn build_nss(dir: PathBuf) {
+fn build_nss(dir: PathBuf, nsstarget: &str) {
     let mut build_nss = vec![
         String::from("./build.sh"),
         String::from("-Ddisable_tests=1"),
         // Generate static libraries in addition to shared libraries.
         String::from("--static"),
     ];
-    if !is_debug() {
+    if nsstarget == "Release" {
         build_nss.push(String::from("-o"));
     }
     if let Ok(d) = env::var("NSS_JOBS") {
@@ -295,20 +302,79 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
         .expect("couldn't write bindings");
 }
 
-fn setup_standalone() -> Vec<String> {
+fn pkg_config() -> Result<Vec<String>, Box<dyn Error>> {
+    let modversion = Command::new("pkg-config")
+        .args(["--modversion", "nss"])
+        .output()?
+        .stdout;
+
+    let modversion = String::from_utf8(modversion)?;
+
+    let modversion = modversion.trim();
+
+    // The NSS version number does not follow semver numbering, because it omits the patch version
+    // when that's 0. Deal with that.
+    let modversion_for_cmp = if modversion.chars().filter(|c| *c == '.').count() == 1 {
+        modversion.to_owned() + ".0"
+    } else {
+        modversion.to_owned()
+    };
+
+    let modversion_for_cmp = Version::parse(&modversion_for_cmp)?;
+
+    let version_req = VersionReq::parse(&format!(">={}", MINIMUM_NSS_VERSION.trim())).unwrap();
+
+    assert!(
+        version_req.matches(&modversion_for_cmp),
+        "neqo has NSS version requirement {version_req}, found {modversion}",
+    );
+
+    let cfg = Command::new("pkg-config")
+        .args(["--cflags", "--libs", "nss"])
+        .output()?
+        .stdout;
+
+    let cfg_str = String::from_utf8(cfg)?;
+
+    let mut flags: Vec<String> = Vec::new();
+
+    for f in cfg_str.split(' ') {
+        if let Some(include) = f.strip_prefix("-I") {
+            flags.push(String::from(f));
+
+            println!("cargo:include={include}");
+        } else if let Some(path) = f.strip_prefix("-L") {
+            println!("cargo:rustc-link-search=native={path}");
+        } else if let Some(lib) = f.strip_prefix("-l") {
+            println!("cargo:rustc-link-lib=dylib={lib}");
+        } else {
+            println!("cargo:warning=Unknown flag from pkg-config: {f}");
+        }
+    }
+
+    Ok(flags)
+}
+
+fn setup_standalone(nss_dir: String) -> Vec<String> {
     setup_clang();
 
-    let nss = nss_dir();
+    let nss = PathBuf::from(nss_dir);
     println!("cargo:rerun-if-env-changed={}", nss.display());
-
-    build_nss(nss.clone());
 
     // $NSS_DIR/../dist/
     let nssdist = nss.parent().unwrap().join("dist");
     println!("cargo:rerun-if-env-changed={}", nssdist.display());
 
-    let nsstarget = env::var("NSS_TARGET")
-        .unwrap_or_else(|_| fs::read_to_string(nssdist.join("latest")).unwrap());
+    // If NSS_PREBUILT is set, we assume that the NSS libraries are already built.
+    let nsstarget;
+    if env::var("NSS_PREBUILT").is_err() {
+        // If NSS is not already built, we can't read the build mode of the last build
+        nsstarget = env::var("NSS_TARGET").unwrap_or_else(|_| String::from("Release"));
+        build_nss(nss, &nsstarget);
+    } else {
+        nsstarget = env::var("NSS_TARGET")
+            .unwrap_or_else(|_| fs::read_to_string(nssdist.join("latest")).unwrap());
+    }
     let nsstarget = nssdist.join(nsstarget.trim());
 
     let includes = get_includes(&nsstarget, &nssdist);
@@ -450,8 +516,10 @@ fn main() {
 
     let flags = if cfg!(feature = "gecko") {
         setup_for_gecko()
+    } else if let Ok(nss_dir) = env::var("NSS_DIR") {
+        setup_standalone(nss_dir.trim().to_string())
     } else {
-        setup_standalone()
+        pkg_config().unwrap_or_else(|_| setup_standalone(nss_dir()))
     };
 
     let config_file = PathBuf::from(BINDINGS_DIR).join(BINDINGS_CONFIG);
