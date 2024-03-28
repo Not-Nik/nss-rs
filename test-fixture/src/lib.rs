@@ -38,9 +38,9 @@ pub fn fixture_init() {
         let mut current_exe = std::env::current_exe().unwrap();
         current_exe.pop();
         let nss_db_path = current_exe.to_str().unwrap();
-        init_db(nss_db_path);
+        init_db(nss_db_path).unwrap();
     } else {
-        init_db(NSS_DB_PATH);
+        init_db(NSS_DB_PATH).unwrap();
     }
 }
 

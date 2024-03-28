@@ -119,7 +119,7 @@ impl Drop for NssLoaded {
     }
 }
 
-static INITIALIZED: OnceCell<NssLoaded> = OnceCell::new();
+static INITIALIZED: OnceCell<Res<NssLoaded>> = OnceCell::new();
 
 fn already_initialized() -> bool {
     unsafe { nss::NSS_IsInitialized() != 0 }
@@ -137,23 +137,24 @@ fn version_check() {
 /// Initialize NSS.  This only executes the initialization routines once, so if there is any chance
 /// that
 ///
-/// # Panics
+/// # Errors
 ///
 /// When NSS initialization fails.
-pub fn init() {
+pub fn init() -> Res<()> {
     // Set time zero.
     time::init();
-    INITIALIZED.get_or_init(|| unsafe {
+    let res = INITIALIZED.get_or_init(|| unsafe {
         version_check();
         if already_initialized() {
-            return NssLoaded::External;
+            return Ok(NssLoaded::External);
         }
 
-        secstatus_to_res(nss::NSS_NoDB_Init(null())).expect("NSS_NoDB_Init failed");
-        secstatus_to_res(nss::NSS_SetDomesticPolicy()).expect("NSS_SetDomesticPolicy failed");
+        secstatus_to_res(nss::NSS_NoDB_Init(null()))?;
+        secstatus_to_res(nss::NSS_SetDomesticPolicy())?;
 
-        NssLoaded::NoDb
+        Ok(NssLoaded::NoDb)
     });
+    res.as_ref().map(|_| ()).map_err(Clone::clone)
 }
 
 /// This enables SSLTRACE by calling a simple, harmless function to trigger its
@@ -161,24 +162,23 @@ pub fn init() {
 /// global options are accessed.  Reading an option is the least impact approach.
 /// This allows us to use SSLTRACE in all of our unit tests and programs.
 #[cfg(debug_assertions)]
-fn enable_ssl_trace() {
+fn enable_ssl_trace() -> Res<()> {
     let opt = ssl::Opt::Locking.as_int();
     let mut v: ::std::os::raw::c_int = 0;
     secstatus_to_res(unsafe { ssl::SSL_OptionGetDefault(opt, &mut v) })
-        .expect("SSL_OptionGetDefault failed");
 }
 
 /// Initialize with a database.
 ///
-/// # Panics
+/// # Errors
 ///
 /// If NSS cannot be initialized.
-pub fn init_db<P: Into<PathBuf>>(dir: P) {
+pub fn init_db<P: Into<PathBuf>>(dir: P) -> Res<()> {
     time::init();
-    INITIALIZED.get_or_init(|| unsafe {
+    let res = INITIALIZED.get_or_init(|| unsafe {
         version_check();
         if already_initialized() {
-            return NssLoaded::External;
+            return Ok(NssLoaded::External);
         }
 
         let path = dir.into();
@@ -192,23 +192,22 @@ pub fn init_db<P: Into<PathBuf>>(dir: P) {
             empty.as_ptr(),
             nss::SECMOD_DB.as_ptr().cast(),
             nss::NSS_INIT_READONLY,
-        ))
-        .expect("NSS_Initialize failed");
+        ))?;
 
-        secstatus_to_res(nss::NSS_SetDomesticPolicy()).expect("NSS_SetDomesticPolicy failed");
+        secstatus_to_res(nss::NSS_SetDomesticPolicy())?;
         secstatus_to_res(ssl::SSL_ConfigServerSessionIDCache(
             1024,
             0,
             0,
             dircstr.as_ptr(),
-        ))
-        .expect("SSL_ConfigServerSessionIDCache failed");
+        ))?;
 
         #[cfg(debug_assertions)]
-        enable_ssl_trace();
+        enable_ssl_trace()?;
 
-        NssLoaded::Db(path.into_boxed_path())
+        Ok(NssLoaded::Db(path.into_boxed_path()))
     });
+    res.as_ref().map(|_| ()).map_err(Clone::clone)
 }
 
 /// # Panics
