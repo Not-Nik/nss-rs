@@ -259,10 +259,6 @@ where
     l.try_into().map_err(|_| Error::IntegerOverflow)
 }
 
-// unsafe fn destroy_aead_context(ctx: *mut PK11Context) {
-//     p11::PK11_DestroyContext(ctx, PRBool::from(true));
-// }
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
     Encrypt,
@@ -281,7 +277,7 @@ impl Mode {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AeadAlgorithms {
     Aes128Gcm,
     Aes256Gcm,
@@ -302,17 +298,20 @@ impl Aead {
         })
     }
 
-    #[cfg(test)]
     pub fn import_key(algorithm: AeadAlgorithms, key: &[u8]) -> Result<SymKey, Error> {
-        let slot = super::p11::Slot::internal()?;
+        let slot = p11::Slot::internal().map_err(|_| Error::Internal)?;
+
+        let key_item = SECItemBorrowed::wrap(key)?;
+        let key_item_ptr = std::ptr::from_ref(key_item.as_ref()).cast_mut();
+
         let ptr = unsafe {
             p11::PK11_ImportSymKey(
                 *slot,
                 Self::mech(algorithm),
                 p11::PK11Origin::PK11_OriginUnwrap,
-                p11::CK_ATTRIBUTE_TYPE::from(p11::CKA_ENCRYPT | p11::CKA_DECRYPT),
-                SECItemBorrowed::wrap(key)?.as_mut(),
-                std::ptr::null_mut(),
+                CK_ATTRIBUTE_TYPE::from(CKA_ENCRYPT | CKA_DECRYPT),
+                key_item_ptr,
+                null_mut(),
             )
         };
         unsafe { SymKey::from_ptr(ptr) }
@@ -324,6 +323,8 @@ impl Aead {
         key: &SymKey,
         nonce_base: [u8; NONCE_LEN],
     ) -> Result<Self, crate::Error> {
+        crate::init()?;
+
         // trace!(
         //     "New AEAD: key={} nonce_base={}",
         //     hex::encode(key.key_data()?),
@@ -345,7 +346,9 @@ impl Aead {
         })
     }
 
-    pub fn seal(&mut self, aad: &[u8], pt: &[u8]) -> Result<Vec<u8>, crate::Error> {
+    pub fn seal(&mut self, aad: &[u8], pt: &[u8]) -> Result<Vec<u8>, Error> {
+        crate::init()?;
+
         assert_eq!(self.mode, Mode::Encrypt);
         // A copy for the nonce generator to write into.  But we don't use the value.
         let mut nonce = self.nonce_base;
@@ -379,12 +382,9 @@ impl Aead {
         Ok(ct)
     }
 
-    pub fn open(
-        &mut self,
-        aad: &[u8],
-        seq: SequenceNumber,
-        ct: &[u8],
-    ) -> Result<Vec<u8>, crate::Error> {
+    pub fn open(&mut self, aad: &[u8], seq: SequenceNumber, ct: &[u8]) -> Result<Vec<u8>, Error> {
+        crate::init()?;
+
         assert_eq!(self.mode, Mode::Decrypt);
         let mut nonce = self.nonce_base;
         for (i, n) in nonce.iter_mut().rev().take(COUNTER_LEN).enumerate() {
