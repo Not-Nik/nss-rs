@@ -9,8 +9,6 @@
 #![allow(clippy::module_name_repetitions)] // This lint doesn't work here.
 #![allow(clippy::unseparated_literal_suffix)] // For bindgen code.
 #![allow(clippy::used_underscore_binding)] // For bindgen code.
-
-mod aead;
 #[cfg(feature = "disable-encryption")]
 pub mod aead_null;
 pub mod agent;
@@ -29,6 +27,7 @@ pub mod ext;
 pub mod hkdf;
 pub mod hp;
 
+pub mod aead;
 pub mod hash;
 pub mod hmac;
 pub mod p11;
