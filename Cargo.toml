@@ -29,8 +29,9 @@ test-fixture = {path = "test-fixture"}
 
 [features]
 deny-warnings = []
-gecko = ["mozbuild"]
 disable-encryption = []
+disable-random = []
+gecko = ["mozbuild"]
 
 [lib]
 # See https://github.com/bheisler/criterion.rs/blob/master/book/src/faq.md#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options

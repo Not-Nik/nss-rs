@@ -9,11 +9,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use std::{
-    cell::RefCell,
-    convert::TryFrom,
-    os::raw::{c_int, c_uint},
-};
+use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint};
 
 use pkcs11_bindings::CKA_VALUE;
 
@@ -187,14 +183,31 @@ unsafe fn destroy_pk11_context(ctxt: *mut PK11Context) {
 }
 scoped_ptr!(Context, PK11Context, destroy_pk11_context);
 
+#[cfg(feature = "disable-random")]
+thread_local! {
+    static CURRENT_VALUE: std::cell::Cell<u8> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(feature = "disable-random")]
+/// Fill a buffer with a predictable sequence of bytes.
+pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
+    let m_buf = buf.as_mut();
+    for v in m_buf.iter_mut() {
+        *v = CURRENT_VALUE.get();
+        CURRENT_VALUE.set(v.wrapping_add(1));
+    }
+    buf
+}
+
 /// Fill a buffer with randomness.
 ///
 /// # Panics
 ///
 /// When `size` is too large or NSS fails.
+#[cfg(not(feature = "disable-random"))]
 pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
     let m_buf = buf.as_mut();
-    let len = c_int::try_from(m_buf.len()).unwrap();
+    let len = std::os::raw::c_int::try_from(m_buf.len()).unwrap();
     secstatus_to_res(unsafe { PK11_GenerateRandom(m_buf.as_mut_ptr(), len) }).unwrap();
     buf
 }
@@ -258,10 +271,13 @@ mod test {
     use test_fixture::fixture_init;
 
     use super::RandomCache;
-    use crate::{random, randomize};
+    use crate::random;
 
+    #[cfg(not(feature = "disable-random"))]
     #[test]
     fn randomness() {
+        use crate::randomize;
+
         fixture_init();
         // If any of these ever fail, there is either a bug, or it's time to buy a lottery ticket.
         assert_ne!(random::<16>(), randomize([0; 16]));
