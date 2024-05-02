@@ -35,7 +35,7 @@ const PR_FAILURE: PrStatus = prtypes::PR_FAILURE;
 
 /// Convert a pinned, boxed object into a void pointer.
 pub fn as_c_void<T: Unpin>(pin: &mut Pin<Box<T>>) -> *mut c_void {
-    (Pin::into_inner(pin.as_mut()) as *mut T).cast()
+    (std::ptr::from_mut::<T>(Pin::into_inner(pin.as_mut()))).cast()
 }
 
 /// A slice of the output.
