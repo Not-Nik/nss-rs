@@ -120,20 +120,22 @@ pub fn keygen(alg: EcCurve) -> Result<(PrivateKey, PublicKey), crate::Error> {
     // Get the Mechanism based on the Curve and its use
     let ckm = ec_curve_to_ckm(&alg);
 
+    // Get the PKCS11 slot
     let slot = Slot::internal()?;
 
-    let mut client_public_ptr = ptr::null_mut();
+    // Create a pointer for the public key
+    let mut pk_ptr = ptr::null_mut();
 
     // https://github.com/mozilla/nss-gk-api/issues/1
     unsafe {
-        let client_private =
+        let sk =
             // Type of `param` argument depends on mechanism. For EC keygen it is
             // `SECKEYECParams *` which is a typedef for `SECItem *`.
             PK11_GenerateKeyPairWithOpFlags(
                 *slot,
                 ckm,
                 oid_ptr.cast(),
-                &mut client_public_ptr,
+                &mut pk_ptr,
                 PK11_ATTR_EXTRACTABLE | PK11_ATTR_INSENSITIVE | PK11_ATTR_SESSION,
                 CKF_DERIVE,
                 CKF_DERIVE,
@@ -141,8 +143,8 @@ pub fn keygen(alg: EcCurve) -> Result<(PrivateKey, PublicKey), crate::Error> {
             )
             .into_result()?;
 
-        let client_public = PublicKey::from_ptr(client_public_ptr)?;
+        let pk = PublicKey::from_ptr(pk_ptr)?;
 
-        Ok((client_private, client_public))
+        Ok((sk, pk))
     }
 }
