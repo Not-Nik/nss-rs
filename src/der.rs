@@ -22,8 +22,10 @@ pub const OID_RS256_BYTES: &[u8] = &[
     0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b,
 ];
 
-const MAX_TAG_AND_LENGTH_BYTES: usize = 4;
-fn write_tag_and_length(out: &mut Vec<u8>, tag: u8, len: usize) -> Result<(), crate::Error> {
+pub const MAX_TAG_AND_LENGTH_BYTES: usize = 4;
+
+#[expect(clippy::cast_possible_truncation)]
+pub fn write_tag_and_length(out: &mut Vec<u8>, tag: u8, len: usize) -> Result<(), Error> {
     if len > 0xFFFF {
         return Err(Error::Internal);
     }
