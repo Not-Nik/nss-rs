@@ -72,6 +72,7 @@ pub enum Error {
     IntegerOverflow,
     InvalidEpoch,
     InvalidCertificateCompressionID,
+    InvalidInput,
     MixedHandshakeMethod,
     NoDataAvailable,
     Nss {
@@ -84,6 +85,7 @@ pub enum Error {
     String,
     TimeTravel,
     UnsupportedCipher,
+    UnsupportedCurve,
     UnsupportedHash,
     UnsupportedVersion,
 }

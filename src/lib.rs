@@ -28,6 +28,7 @@ pub mod hkdf;
 pub mod hp;
 
 pub mod aead;
+pub mod der;
 pub mod hash;
 pub mod hmac;
 // pub mod hpke;
