@@ -181,6 +181,7 @@ functions = [
     "CERT_DestroyCertificate",
     "CERT_DestroyCertList",
     "CERT_GetCertificateDer",
+    "NSS_SetAlgorithmPolicy",
     "PK11_CipherOp",
     "PK11_CreateContextBySymKey",
     "PK11_Decrypt",
@@ -237,6 +238,7 @@ opaque = [
 variables = [
     "AES_BLOCK_SIZE",
     "PK11_ATTR_EXTRACTABLE",
+    "NSS_USE_ALG_IN_SSL_KX",
     "PK11_ATTR_INSENSITIVE",
     "PK11_ATTR_PRIVATE",
     "PK11_ATTR_PUBLIC",

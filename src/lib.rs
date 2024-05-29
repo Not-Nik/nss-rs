@@ -151,6 +151,11 @@ pub fn init() -> Res<()> {
 
         secstatus_to_res(nss::NSS_NoDB_Init(null()))?;
         secstatus_to_res(nss::NSS_SetDomesticPolicy())?;
+        secstatus_to_res(p11::NSS_SetAlgorithmPolicy(
+            p11::SECOidTag::SEC_OID_XYBER768D00,
+            p11::NSS_USE_ALG_IN_SSL_KX,
+            0,
+        ))?;
 
         Ok(NssLoaded::NoDb)
     });
@@ -195,6 +200,11 @@ pub fn init_db<P: Into<PathBuf>>(dir: P) -> Res<()> {
         ))?;
 
         secstatus_to_res(nss::NSS_SetDomesticPolicy())?;
+        secstatus_to_res(p11::NSS_SetAlgorithmPolicy(
+            p11::SECOidTag::SEC_OID_XYBER768D00,
+            p11::NSS_USE_ALG_IN_SSL_KX,
+            0,
+        ))?;
         secstatus_to_res(ssl::SSL_ConfigServerSessionIDCache(
             1024,
             0,
