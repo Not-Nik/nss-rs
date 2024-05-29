@@ -15,22 +15,39 @@ use crate::{
     err::IntoResult,
     init,
     p11::{
-        PK11_GenerateKeyPairWithOpFlags, PrivateKey, PublicKey, Slot, PK11_ATTR_EXTRACTABLE,
-        PK11_ATTR_INSENSITIVE, PK11_ATTR_SESSION,
+        PK11_GenerateKeyPairWithOpFlags, Slot, PK11_ATTR_EXTRACTABLE, PK11_ATTR_INSENSITIVE,
+        PK11_ATTR_SESSION,
     },
-    SECItem, SECItemBorrowed,
+    Error, PrivateKey, PublicKey, SECItem, SECItemBorrowed,
 };
 
 //
 // Constants
 //
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum EcCurve {
     P256,
     P384,
     P521,
     X25519,
     Ed25519,
+}
+
+pub type EcdhPublicKey = PublicKey;
+pub type EcdhPrivateKey = PrivateKey;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Ecdh(EcCurve);
+
+impl Ecdh {
+    pub fn new(&self) -> Self {
+        return self.clone();
+    }
+
+    pub fn keygen(&self, curve: EcCurve) -> Result<(EcdhPrivateKey, EcdhPublicKey), crate::Error> {
+        return ecdh_keygen(curve);
+    }
 }
 
 // Object identifiers in DER tag-length-value form
@@ -79,7 +96,7 @@ pub const OID_ED35519_BYTES: &[u8] = &[
     0x2B, 0x65, 0x70,
 ];
 
-pub fn object_id(val: &[u8]) -> Result<Vec<u8>, crate::Error> {
+pub fn object_id(val: &[u8]) -> Result<Vec<u8>, Error> {
     let mut out = Vec::with_capacity(der::MAX_TAG_AND_LENGTH_BYTES + val.len());
     der::write_tag_and_length(&mut out, der::TAG_OBJECT_ID, val.len())?;
     out.extend_from_slice(val);
@@ -108,10 +125,7 @@ const fn ec_curve_to_ckm(alg: &EcCurve) -> pkcs11_bindings::CK_MECHANISM_TYPE {
 // Curve functions
 //
 
-// pub type EcPublicKey: Vec<u8>;
-// pub type EcPrivateKey: Vec<u8>;
-
-pub fn keygen(alg: EcCurve) -> Result<(PrivateKey, PublicKey), crate::Error> {
+fn ecdh_keygen(alg: EcCurve) -> Result<(EcdhPrivateKey, EcdhPublicKey), crate::Error> {
     init()?;
 
     // Get the OID for the Curve
@@ -146,7 +160,7 @@ pub fn keygen(alg: EcCurve) -> Result<(PrivateKey, PublicKey), crate::Error> {
             )
             .into_result()?;
 
-        let pk = PublicKey::from_ptr(pk_ptr)?;
+        let pk = EcdhPublicKey::from_ptr(pk_ptr)?;
 
         Ok((sk, pk))
     }
