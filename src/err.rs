@@ -143,7 +143,7 @@ where
     }
 }
 
-pub fn is_blocked(result: &Res<()>) -> bool {
+pub const fn is_blocked(result: &Res<()>) -> bool {
     match result {
         Err(Error::NssError { code, .. }) => *code == nspr::PR_WOULD_BLOCK_ERROR,
         _ => false,
