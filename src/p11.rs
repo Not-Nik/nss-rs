@@ -31,11 +31,22 @@ pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
     ret
 }
 
-#[allow(clippy::upper_case_acronyms)]
 #[allow(clippy::unreadable_literal)]
-#[allow(unknown_lints, clippy::borrow_as_ptr)]
 mod nss_p11 {
-    use crate::{nss_prelude::*, prtypes::*};
+    #![allow(
+        non_snake_case,
+        non_upper_case_globals,
+        non_camel_case_types,
+        clippy::all,
+        clippy::nursery,
+        clippy::pedantic,
+        clippy::restriction,
+        reason = "For included bindgen code."
+    )]
+    use crate::{
+        nss_prelude::*,
+        prtypes::{PRBool, PRInt32, PRUint32, PRUint8, PRUword},
+    };
     include!(concat!(env!("OUT_DIR"), "/nss_p11.rs"));
 }
 
