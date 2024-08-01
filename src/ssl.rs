@@ -37,10 +37,7 @@ mod nss_ssl {
     use crate::{
         err::PRErrorCode,
         nss_prelude::*,
-        p11::{
-            CERTCertList, CERTCertificateStr, HpkeAeadId, HpkeKdfId, PK11SymKeyStr,
-            SECKEYPrivateKeyStr,
-        },
+        p11::{CERTCertificateStr, HpkeAeadId, HpkeKdfId, PK11SymKeyStr, SECKEYPrivateKeyStr},
         prio::{PRFileDesc, PRFileInfo, PRFileInfo64, PRIOVec},
         time::PRTime,
     };
