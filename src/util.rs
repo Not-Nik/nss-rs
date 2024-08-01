@@ -4,7 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{convert::TryFrom, marker::PhantomData, mem, os::raw::c_uint, ptr::null_mut};
+use std::{
+    convert::TryFrom as _, marker::PhantomData, mem, os::raw::c_uint, ptr::null_mut, slice::Iter,
+};
 
 use crate::{nss_prelude::*, null_safe_slice, prtypes::*};
 
@@ -118,7 +120,41 @@ impl ScopedSECItem {
     }
 }
 
-/// An owned SECItem.
+unsafe fn destroy_secitem_array(array: *mut SECItemArray) {
+    SECITEM_FreeArray(array, PRBool::from(true));
+}
+scoped_ptr!(ScopedSECItemArray, SECItemArray, destroy_secitem_array);
+
+#[expect(clippy::into_iter_without_iter)]
+impl<'a> IntoIterator for &'a ScopedSECItemArray {
+    type Item = &'a [u8];
+    type IntoIter = ScopedSECItemArrayIterator<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter {
+            iter: AsRef::<[SECItem]>::as_ref(self).iter(),
+        }
+    }
+}
+
+impl AsRef<[SECItem]> for ScopedSECItemArray {
+    fn as_ref(&self) -> &[SECItem] {
+        unsafe { null_safe_slice((*self.ptr).items, (*self.ptr).len) }
+    }
+}
+
+pub struct ScopedSECItemArrayIterator<'a> {
+    iter: Iter<'a, SECItem>,
+}
+
+impl<'a> Iterator for ScopedSECItemArrayIterator<'a> {
+    type Item = &'a [u8];
+    fn next(&mut self) -> Option<&'a [u8]> {
+        let item = self.iter.next()?;
+        unsafe { Some(item.as_slice()) }
+    }
+}
+
+/// An owned `SECItem`.
 ///
 /// The `SECItem` structure is allocated by Rust. The buffer referenced by the
 /// `SECItem` is allocated by NSS. `SECITEM_FreeItem` will be called to free the
