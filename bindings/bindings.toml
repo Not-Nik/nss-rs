@@ -263,6 +263,7 @@ variables = [
     "PK11_ATTR_PUBLIC",
     "PK11_ATTR_SENSITIVE",
     "PK11_ATTR_SESSION",
+    "KU_ALL",
     "SEC_ASN1_OBJECT_ID",
     "SHA256_LENGTH",
     "SHA384_LENGTH",
