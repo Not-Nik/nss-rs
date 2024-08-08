@@ -10,6 +10,8 @@ use pkcs11_bindings::{
     CKF_DERIVE, CKM_EC_EDWARDS_KEY_PAIR_GEN, CKM_EC_KEY_PAIR_GEN, CKM_EC_MONTGOMERY_KEY_PAIR_GEN,
 };
 
+// use crate::p11::SECKEY_CreateSubjectPublicKeyInfo;
+use crate::Error;
 use crate::{
     der,
     err::IntoResult,
@@ -19,7 +21,7 @@ use crate::{
         PK11_ImportDERPrivateKeyInfoAndReturnKey, Slot, KU_ALL, PK11_ATTR_EXTRACTABLE,
         PK11_ATTR_INSENSITIVE, PK11_ATTR_SESSION,
     },
-    Error, PrivateKey, PublicKey, SECItem, SECItemBorrowed,
+    PrivateKey, PublicKey, SECItem, SECItemBorrowed,
 };
 
 //
@@ -162,16 +164,16 @@ pub fn ecdh_keygen(curve: &EcCurve) -> Result<EcdhKeypair, Error> {
     }
 }
 
-pub fn export_ec_private_key(key: PrivateKey) -> Result<Vec<u8>, Error> {
+pub fn export_ec_private_key_pkcs8(key: &PrivateKey) -> Result<Vec<u8>, Error> {
     init()?;
     unsafe {
         let sk: crate::ScopedSECItem =
-            PK11_ExportDERPrivateKeyInfo(*key, ptr::null_mut()).into_result()?;
+            PK11_ExportDERPrivateKeyInfo(**key, ptr::null_mut()).into_result()?;
         return Ok(sk.into_vec());
     }
 }
 
-pub fn import_ec_private_key(pki: &[u8]) -> Result<PrivateKey, Error> {
+pub fn import_ec_private_key_pkcs8(pki: &[u8]) -> Result<PrivateKey, Error> {
     init()?;
 
     // Get the PKCS11 slot
@@ -195,6 +197,22 @@ pub fn import_ec_private_key(pki: &[u8]) -> Result<PrivateKey, Error> {
             ptr::null_mut(),
         );
         let sk = EcdhPrivateKey::from_ptr(pk_ptr)?;
-        Ok(sk)
+        match r {
+            0 => Ok(sk),
+            _ => Err(Error::InvalidInput),
+        }
     }
 }
+
+// // I think it should be like this:
+// pub fn export_ec_public_key_spki(key: PublicKey)
+// {
+//     unsafe{
+
+//     let a = SECKEY_CreateSubjectPublicKeyInfo(*key);
+//     // let template = CERT_SubjectPublicKeyInfoTemplate;
+//     // let encoded = SEC_ASN1EncodeItem();
+
+//     }
+
+// }
