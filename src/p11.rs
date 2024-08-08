@@ -57,6 +57,14 @@ mod nss_p11 {
     include!(concat!(env!("OUT_DIR"), "/nss_p11.rs"));
 }
 
+#[allow(clippy::upper_case_acronyms)]
+#[allow(clippy::unreadable_literal)]
+#[allow(unknown_lints, clippy::borrow_as_ptr)]
+mod nss_asn1 {
+    // include!("/home/anna/cryptoWrappers/mls-rs/mls-rs/target/debug/build/
+    // nss-gk-api-c74c2eed8ef92694/out/nss_asn1.rs");
+}
+
 pub use nss_p11::*;
 
 use crate::{null_safe_slice, prtypes::PRBool};
