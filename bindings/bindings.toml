@@ -167,6 +167,7 @@ variables = [
     "SECMOD_DB",
 ]
 
+
 [nss_p11]
 types = [
     "CERTCertificateStr",
@@ -233,6 +234,7 @@ functions = [
     "SECITEM_ReallocItemV2",
     "SECKEY_CopyPrivateKey",
     "SECKEY_CopyPublicKey",
+    "SECKEY_CreateSubjectPublicKeyInfo",
     "SECKEY_DecodeDERSubjectPublicKeyInfo",
     "SECKEY_DestroyPrivateKey",
     "SECKEY_DestroyPublicKey",
@@ -345,3 +347,19 @@ enums = [
 [nspr_time]
 types = ["PRTime"]
 functions = ["PR_Now"]
+
+
+
+[nss_asn1]
+types = [
+    "SEC_ASN1Template",
+]
+functions = [
+    "SEC_ASN1EncodeItem",
+    "SEC_ASN1EncodeInteger",
+    "SEC_ASN1DecodeInteger",
+    "SEC_ASN1EncodeItem",
+]
+variables = [
+    "CERT_SubjectPublicKeyInfoTemplate",
+]

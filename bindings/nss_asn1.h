@@ -4,6 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#include "nss.h"
-#include "ssl.h" // For NSS_SetDomesticPolicy
+#include "secport.h"
+#include "secoid.h"
+#include "secitem.h"
+#include "secdig.h"
+#include "secder.h"
+#include "secasn1.h"
+#include "base64.h"
+#include "nssb64.h"
+#include "nssrwlk.h"
+#include "cert.h"
+#include "prerror.h"
+#include "nsshash.h"
 
+#include "secasn1.h"
