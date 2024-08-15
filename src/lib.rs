@@ -122,10 +122,6 @@ impl Drop for NssLoaded {
 
 static INITIALIZED: OnceCell<Res<NssLoaded>> = OnceCell::new();
 
-fn already_initialized() -> bool {
-    unsafe { nss::NSS_IsInitialized() != 0 }
-}
-
 fn version_check() -> Res<()> {
     let min_ver = CString::new(MINIMUM_NSS_VERSION)?;
     if unsafe { nss::NSS_VersionCheck(min_ver.as_ptr()) } == 0 {
@@ -133,34 +129,6 @@ fn version_check() -> Res<()> {
         return Err(Error::UnsupportedVersion);
     }
     Ok(())
-}
-
-/// Initialize NSS.  This only executes the initialization routines once, so if there is any chance
-/// that
-///
-/// # Errors
-///
-/// When NSS initialization fails.
-pub fn init() -> Res<()> {
-    // Set time zero.
-    time::init();
-    let res = INITIALIZED.get_or_init(|| unsafe {
-        version_check()?;
-        if already_initialized() {
-            return Ok(NssLoaded::External);
-        }
-
-        secstatus_to_res(nss::NSS_NoDB_Init(null()))?;
-        secstatus_to_res(nss::NSS_SetDomesticPolicy())?;
-        secstatus_to_res(p11::NSS_SetAlgorithmPolicy(
-            p11::SECOidTag::SEC_OID_XYBER768D00,
-            p11::NSS_USE_ALG_IN_SSL_KX,
-            0,
-        ))?;
-
-        Ok(NssLoaded::NoDb)
-    });
-    res.as_ref().map(|_| ()).map_err(Clone::clone)
 }
 
 /// This enables SSLTRACE by calling a simple, harmless function to trigger its
@@ -174,50 +142,73 @@ fn enable_ssl_trace() -> Res<()> {
     secstatus_to_res(unsafe { ssl::SSL_OptionGetDefault(opt, &mut v) })
 }
 
+fn init_once(db: Option<PathBuf>) -> Res<NssLoaded> {
+    // Set time zero.
+    time::init();
+    version_check()?;
+    if unsafe { nss::NSS_IsInitialized() != 0 } {
+        return Ok(NssLoaded::External);
+    }
+
+    let state = if let Some(path) = db {
+        if !path.is_dir() {
+            return Err(Error::InternalError);
+        }
+        let pathstr = path.to_str().ok_or(Error::InternalError)?;
+        let dircstr = CString::new(pathstr)?;
+        let empty = CString::new("")?;
+        secstatus_to_res(unsafe {
+            nss::NSS_Initialize(
+                dircstr.as_ptr(),
+                empty.as_ptr(),
+                empty.as_ptr(),
+                nss::SECMOD_DB.as_ptr().cast(),
+                nss::NSS_INIT_READONLY,
+            )
+        })?;
+
+        secstatus_to_res(unsafe {
+            ssl::SSL_ConfigServerSessionIDCache(1024, 0, 0, dircstr.as_ptr())
+        })?;
+        NssLoaded::Db(path.into_boxed_path())
+    } else {
+        secstatus_to_res(unsafe { nss::NSS_NoDB_Init(null()) })?;
+        NssLoaded::NoDb
+    };
+
+    secstatus_to_res(unsafe { nss::NSS_SetDomesticPolicy() })?;
+    secstatus_to_res(unsafe {
+        p11::NSS_SetAlgorithmPolicy(
+            p11::SECOidTag::SEC_OID_XYBER768D00,
+            p11::NSS_USE_ALG_IN_SSL_KX,
+            0,
+        )
+    })?;
+
+    #[cfg(debug_assertions)]
+    enable_ssl_trace()?;
+
+    Ok(state)
+}
+
+/// Initialize NSS.  This only executes the initialization routines once, so if there is any chance
+/// that this is invoked twice, that's OK.
+///
+/// # Errors
+///
+/// When NSS initialization fails.
+pub fn init() -> Res<()> {
+    let res = INITIALIZED.get_or_init(|| init_once(None));
+    res.as_ref().map(|_| ()).map_err(Clone::clone)
+}
+
 /// Initialize with a database.
 ///
 /// # Errors
 ///
 /// If NSS cannot be initialized.
 pub fn init_db<P: Into<PathBuf>>(dir: P) -> Res<()> {
-    time::init();
-    let res = INITIALIZED.get_or_init(|| unsafe {
-        version_check()?;
-        if already_initialized() {
-            return Ok(NssLoaded::External);
-        }
-
-        let path = dir.into();
-        assert!(path.is_dir());
-        let pathstr = path.to_str().expect("path converts to string").to_string();
-        let dircstr = CString::new(pathstr).unwrap();
-        let empty = CString::new("").unwrap();
-        secstatus_to_res(nss::NSS_Initialize(
-            dircstr.as_ptr(),
-            empty.as_ptr(),
-            empty.as_ptr(),
-            nss::SECMOD_DB.as_ptr().cast(),
-            nss::NSS_INIT_READONLY,
-        ))?;
-
-        secstatus_to_res(nss::NSS_SetDomesticPolicy())?;
-        secstatus_to_res(p11::NSS_SetAlgorithmPolicy(
-            p11::SECOidTag::SEC_OID_XYBER768D00,
-            p11::NSS_USE_ALG_IN_SSL_KX,
-            0,
-        ))?;
-        secstatus_to_res(ssl::SSL_ConfigServerSessionIDCache(
-            1024,
-            0,
-            0,
-            dircstr.as_ptr(),
-        ))?;
-
-        #[cfg(debug_assertions)]
-        enable_ssl_trace()?;
-
-        Ok(NssLoaded::Db(path.into_boxed_path()))
-    });
+    let res = INITIALIZED.get_or_init(|| init_once(Some(dir.into())));
     res.as_ref().map(|_| ()).map_err(Clone::clone)
 }
 
