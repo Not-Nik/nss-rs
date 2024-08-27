@@ -6,9 +6,16 @@
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
-#![allow(clippy::module_name_repetitions)] // This lint doesn't work here.
-#![allow(clippy::unseparated_literal_suffix)] // For bindgen code.
-#![allow(clippy::used_underscore_binding)] // For bindgen code.
+// Bindgen auto generated code
+// won't adhere to the clippy rules below
+#![allow(clippy::borrow_as_ptr)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::unseparated_literal_suffix)]
+#![allow(clippy::used_underscore_binding)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_safety_doc)]
+
 #[cfg(feature = "disable-encryption")]
 pub mod aead_null;
 pub mod agent;
