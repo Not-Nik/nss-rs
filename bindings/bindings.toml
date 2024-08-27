@@ -226,6 +226,7 @@ functions = [
     "PK11_ImportSymKey",
     "PK11_PubDeriveWithKDF",
     "PK11_ReadRawAttribute",
+    "PK11_WriteRawAttribute",
     "PK11_ReferenceSymKey",
     "PK11_SignWithMechanism",
     "PK11_VerifyWithMechanism",
