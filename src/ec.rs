@@ -22,8 +22,9 @@ use crate::{
         PK11ObjectType,
         PK11ObjectType::{PK11_TypePrivKey, PK11_TypePubKey},
         PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPairWithOpFlags,
-        PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_ReadRawAttribute, PK11_WriteRawAttribute,
-        Slot, KU_ALL, PK11_ATTR_EXTRACTABLE, PK11_ATTR_INSENSITIVE, PK11_ATTR_SESSION,
+        PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_PubDeriveWithKDF, PK11_ReadRawAttribute,
+        PK11_WriteRawAttribute, Slot, KU_ALL, PK11_ATTR_EXTRACTABLE, PK11_ATTR_INSENSITIVE,
+        PK11_ATTR_SESSION,
     },
     util::SECItemMut,
     Error, PrivateKey, PublicKey, SECItem, SECItemBorrowed,
@@ -348,4 +349,31 @@ pub fn export_ec_private_key_from_raw(key: PrivateKey) -> Result<Vec<u8>, Error>
         )
     };
     Ok(key_item.as_slice().to_owned())
+}
+
+pub fn ecdh(sk: PrivateKey, pk: PublicKey) -> Result<PublicKey, Error> {
+    unsafe {
+        let k: *mut crate::p11::PK11SymKeyStr = PK11_PubDeriveWithKDF(
+            sk.cast(),
+            pk.cast(),
+            0,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            pkcs11_bindings::CKM_ECDH1_DERIVE,
+            pkcs11_bindings::CKM_SHA512_HMAC,
+            pkcs11_bindings::CKA_SIGN,
+            0,
+            pkcs11_bindings::CKD_NULL,
+            ptr::null_mut(),
+            ptr::null_mut(),
+        );
+    };
+    Err(Error::InvalidInput)
+}
+
+pub fn convert_to_public(sk: PrivateKey) -> Result<PublicKey, Error> {
+    unsafe {
+        let pk = crate::p11::SECKEY_ConvertToPublicKey(*sk).into_result()?;
+        Ok(pk)
+    }
 }
