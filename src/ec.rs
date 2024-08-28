@@ -351,9 +351,9 @@ pub fn export_ec_private_key_from_raw(key: PrivateKey) -> Result<Vec<u8>, Error>
     Ok(key_item.as_slice().to_owned())
 }
 
-pub fn ecdh(sk: PrivateKey, pk: PublicKey) -> Result<PublicKey, Error> {
+pub fn ecdh(sk: PrivateKey, pk: PublicKey) -> Result<Vec<u8>, Error> {
     unsafe {
-        let k: *mut crate::p11::PK11SymKeyStr = PK11_PubDeriveWithKDF(
+        let k = PK11_PubDeriveWithKDF(
             sk.cast(),
             pk.cast(),
             0,
@@ -366,9 +366,16 @@ pub fn ecdh(sk: PrivateKey, pk: PublicKey) -> Result<PublicKey, Error> {
             pkcs11_bindings::CKD_NULL,
             ptr::null_mut(),
             ptr::null_mut(),
-        );
-    };
-    Err(Error::InvalidInput)
+        )
+        .into_result()
+        .unwrap();
+
+        crate::p11::PK11_ExtractKeyValue(k.as_mut().unwrap());
+
+        let extracted = crate::p11::PK11_GetKeyData(k.as_mut().unwrap());
+        let r = extracted.into_result().unwrap().into_vec();
+        Ok(r)
+    }
 }
 
 pub fn convert_to_public(sk: PrivateKey) -> Result<PublicKey, Error> {
