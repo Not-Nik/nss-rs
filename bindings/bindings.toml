@@ -204,6 +204,7 @@ functions = [
     "PK11_FreeSlot",
     "PK11_FreeSymKey",
     "PK11_GenerateKeyPairWithOpFlags",
+    "PK11_GenerateKeyPair",
     "PK11_GenerateRandom",
     "PK11_GetBlockSize",
     "PK11_GetInternalSlot",
@@ -296,6 +297,7 @@ variables = [
     "CKM_SHA384_HMAC",
     "CKM_SHA512_HMAC",
     "CKM_ECDSA",
+    "CKM_EDDSA",
 ]
 
 [nspr_err]
