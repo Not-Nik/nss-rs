@@ -295,6 +295,7 @@ variables = [
     "CKM_SHA256_HMAC",
     "CKM_SHA384_HMAC",
     "CKM_SHA512_HMAC",
+    "CKM_ECDSA",
 ]
 
 [nspr_err]
