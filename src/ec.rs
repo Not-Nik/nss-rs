@@ -6,14 +6,13 @@
 
 use std::ptr;
 
-use pkcs11_bindings::{CKA_EC_POINT, CKA_VALUE};
-// use std::ptr::null;
-// use std::ptr::null_mut;
 use pkcs11_bindings::{
-    CKF_DERIVE, CKM_EC_EDWARDS_KEY_PAIR_GEN, CKM_EC_KEY_PAIR_GEN, CKM_EC_MONTGOMERY_KEY_PAIR_GEN,
+    CKA_EC_POINT, CKA_VALUE, CKM_EC_EDWARDS_KEY_PAIR_GEN, CKM_EC_KEY_PAIR_GEN,
+    CKM_EC_MONTGOMERY_KEY_PAIR_GEN, CK_FALSE,
 };
 
-// use crate::p11::SECKEY_CreateSubjectPublicKeyInfo;
+// use std::ptr::null;
+// use std::ptr::null_mut;
 use crate::{
     der,
     err::IntoResult,
@@ -21,10 +20,9 @@ use crate::{
     p11::{
         PK11ObjectType,
         PK11ObjectType::{PK11_TypePrivKey, PK11_TypePubKey},
-        PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPairWithOpFlags,
+        PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPair,
         PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_PubDeriveWithKDF, PK11_ReadRawAttribute,
-        PK11_WriteRawAttribute, Slot, KU_ALL, PK11_ATTR_EXTRACTABLE, PK11_ATTR_INSENSITIVE,
-        PK11_ATTR_SESSION,
+        PK11_WriteRawAttribute, Slot, KU_ALL,
     },
     util::SECItemMut,
     Error, PrivateKey, PublicKey, SECItem, SECItemBorrowed,
@@ -144,20 +142,31 @@ pub fn ecdh_keygen(curve: &EcCurve) -> Result<EcdhKeypair, Error> {
 
     // https://github.com/mozilla/nss-gk-api/issues/1
     unsafe {
-        let sk =
-            // Type of `param` argument depends on mechanism. For EC keygen it is
-            // `SECKEYECParams *` which is a typedef for `SECItem *`.
-            PK11_GenerateKeyPairWithOpFlags(
-                *slot,
-                ckm,
-                oid_ptr.cast(),
-                &mut pk_ptr,
-                PK11_ATTR_EXTRACTABLE | PK11_ATTR_INSENSITIVE | PK11_ATTR_SESSION,
-                CKF_DERIVE,
-                CKF_DERIVE,
-                ptr::null_mut(),
-            )
-            .into_result()?;
+        // let sk =
+        //     // Type of `param` argument depends on mechanism. For EC keygen it is
+        //     // `SECKEYECParams *` which is a typedef for `SECItem *`.
+        //     PK11_GenerateKeyPairWithOpFlags(
+        //         *slot,
+        //         ckm,
+        //         oid_ptr.cast(),
+        //         &mut pk_ptr,
+        //         PK11_ATTR_EXTRACTABLE | PK11_ATTR_INSENSITIVE | PK11_ATTR_SESSION,
+        //         CKF_DERIVE,
+        //         CKF_DERIVE,
+        //         ptr::null_mut(),
+        //     )
+        //     .into_result()?;
+
+        let sk = PK11_GenerateKeyPair(
+            *slot,
+            ckm,
+            oid_ptr.cast(),
+            &mut pk_ptr,
+            CK_FALSE.into(),
+            CK_FALSE.into(),
+            ptr::null_mut(),
+        )
+        .into_result()?;
 
         let pk = EcdhPublicKey::from_ptr(pk_ptr)?;
 
@@ -210,9 +219,8 @@ pub fn import_ec_private_key_pkcs8(pki: &[u8]) -> Result<PrivateKey, Error> {
     }
 }
 
-pub fn import_ec_public_key_from_raw(key: &[u8]) -> Result<PublicKey, Error> {
+pub fn import_ec_public_key_from_raw(key: &[u8], curve: EcCurve) -> Result<PublicKey, Error> {
     init()?;
-    let curve = EcCurve::P256;
 
     // Get the OID for the Curve
     let curve_oid = ec_curve_to_oid(&curve);
@@ -234,14 +242,13 @@ pub fn import_ec_public_key_from_raw(key: &[u8]) -> Result<PublicKey, Error> {
         let _sk =
             // Type of `param` argument depends on mechanism. For EC keygen it is
             // `SECKEYECParams *` which is a typedef for `SECItem *`.
-            PK11_GenerateKeyPairWithOpFlags(
+            PK11_GenerateKeyPair(
                 *slot,
                 ckm,
                 oid_ptr.cast(),
                 &mut pk_ptr,
-                PK11_ATTR_EXTRACTABLE | PK11_ATTR_INSENSITIVE | PK11_ATTR_SESSION,
-                CKF_DERIVE,
-                CKF_DERIVE,
+                CK_FALSE.into(),
+                CK_FALSE.into(),
                 ptr::null_mut(),
             )
             .into_result()?;
@@ -298,14 +305,13 @@ pub fn import_ec_private_key_from_raw(key: &[u8]) -> Result<PrivateKey, Error> {
         let sk =
             // Type of `param` argument depends on mechanism. For EC keygen it is
             // `SECKEYECParams *` which is a typedef for `SECItem *`.
-            PK11_GenerateKeyPairWithOpFlags(
+            PK11_GenerateKeyPair(
                 *slot,
                 ckm,
                 oid_ptr.cast(),
                 &mut pk_ptr,
-                PK11_ATTR_EXTRACTABLE | PK11_ATTR_INSENSITIVE | PK11_ATTR_SESSION,
-                CKF_DERIVE,
-                CKF_DERIVE,
+                CK_FALSE.into(),
+                CK_FALSE.into(),
                 ptr::null_mut(),
             )
             .into_result()?;
