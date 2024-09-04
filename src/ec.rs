@@ -258,3 +258,79 @@ pub fn convert_to_public(sk: &PrivateKey) -> Result<PublicKey, Error> {
         Ok(pk)
     }
 }
+
+pub fn sign(
+    private_key: &PrivateKey,
+    data: &[u8],
+    mechanism: std::os::raw::c_ulong,
+) -> Result<Vec<u8>, Error> {
+    init()?;
+    unsafe {
+        let data_signature = vec![0u8; 0x40];
+
+        let mut data_to_sign = SECItemBorrowed::wrap(&data)?;
+        let mut signature = SECItemBorrowed::wrap(&data_signature)?;
+
+        let rv = crate::p11::PK11_SignWithMechanism(
+            private_key.as_mut().unwrap(),
+            mechanism,
+            ptr::null_mut(),
+            signature.as_mut(),
+            data_to_sign.as_mut(),
+        );
+
+        let signature = signature.as_slice().to_vec();
+        Ok(signature)
+    }
+}
+
+#[allow(clippy::allow_attributes)]
+#[allow(clippy::useless_conversion)]
+pub fn sign_ecdsa(private_key: &PrivateKey, data: &[u8]) -> Result<Vec<u8>, Error> {
+    sign(private_key, data, crate::p11::CKM_ECDSA.into())
+}
+
+#[allow(clippy::allow_attributes)]
+#[allow(clippy::useless_conversion)]
+pub fn sign_eddsa(private_key: &PrivateKey, data: &[u8]) -> Result<Vec<u8>, Error> {
+    sign(private_key, data, crate::p11::CKM_EDDSA.into())
+}
+
+pub fn verify(
+    public_key: &PublicKey,
+    data: &[u8],
+    signature: &[u8],
+    mechanism: std::os::raw::c_ulong,
+) -> Result<bool, Error> {
+    init()?;
+    unsafe {
+        let mut data_to_sign = SECItemBorrowed::wrap(data)?;
+        let mut signature = SECItemBorrowed::wrap(signature)?;
+
+        let rv = crate::p11::PK11_VerifyWithMechanism(
+            public_key.as_mut().ok_or(Error::InvalidInput)?,
+            mechanism,
+            ptr::null_mut(),
+            signature.as_mut(),
+            data_to_sign.as_mut(),
+            ptr::null_mut(),
+        );
+
+        match rv {
+            0 => Ok(true),
+            _ => Ok(false),
+        }
+    }
+}
+
+#[allow(clippy::allow_attributes)]
+#[allow(clippy::useless_conversion)]
+pub fn verify_ecdsa(public_key: &PublicKey, data: &[u8], signature: &[u8]) -> Result<bool, Error> {
+    verify(public_key, data, signature, crate::p11::CKM_ECDSA.into())
+}
+
+#[allow(clippy::allow_attributes)]
+#[allow(clippy::useless_conversion)]
+pub fn verify_eddsa(public_key: &PublicKey, data: &[u8], signature: &[u8]) -> Result<bool, Error> {
+    verify(public_key, data, signature, crate::p11::CKM_EDDSA.into())
+}
