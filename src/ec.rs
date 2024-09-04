@@ -4,7 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-// use std::convert::TryInto;
 use std::ptr;
 
 use pkcs11_bindings::{
@@ -16,7 +15,7 @@ use pkcs11_bindings::{
 // use std::ptr::null_mut;
 use crate::{
     der,
-    err::{secstatus_to_res, IntoResult},
+    err::{secstatus_to_res, Error, IntoResult as _},
     init,
     p11::{
         PK11ObjectType::PK11_TypePrivKey, PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPair,
@@ -24,9 +23,8 @@ use crate::{
         SECKEY_DecodeDERSubjectPublicKeyInfo, Slot, KU_ALL,
     },
     util::SECItemMut,
-    Error, PrivateKey, PublicKey, SECItem, SECItemBorrowed,
+    PrivateKey, PublicKey, SECItem, SECItemBorrowed,
 };
-
 //
 // Constants
 //
