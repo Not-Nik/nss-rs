@@ -16,7 +16,7 @@ use pkcs11_bindings::{
 // use std::ptr::null_mut;
 use crate::{
     der,
-    err::IntoResult,
+    err::{secstatus_to_res, IntoResult},
     init,
     p11::{
         PK11ObjectType::PK11_TypePrivKey, PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPair,
@@ -168,7 +168,7 @@ pub fn export_ec_private_key_pkcs8(key: &PrivateKey) -> Result<Vec<u8>, Error> {
     unsafe {
         let sk: crate::ScopedSECItem =
             PK11_ExportDERPrivateKeyInfo(**key, ptr::null_mut()).into_result()?;
-        return Ok(sk.into_vec());
+        Ok(sk.into_vec())
     }
 }
 
@@ -199,7 +199,7 @@ pub fn import_ec_private_key_pkcs8(pki: &[u8]) -> Result<PrivateKey, Error> {
     let mut pk_ptr = ptr::null_mut();
 
     unsafe {
-        let r = PK11_ImportDERPrivateKeyInfoAndReturnKey(
+        secstatus_to_res(PK11_ImportDERPrivateKeyInfoAndReturnKey(
             *slot,
             der_pki_ptr,
             ptr::null_mut(),
@@ -209,12 +209,11 @@ pub fn import_ec_private_key_pkcs8(pki: &[u8]) -> Result<PrivateKey, Error> {
             KU_ALL,
             &mut pk_ptr,
             ptr::null_mut(),
-        );
+        ))
+        .expect("PKCS8 encoded key import has failed");
+
         let sk = EcdhPrivateKey::from_ptr(pk_ptr)?;
-        match r {
-            0 => Ok(sk),
-            _ => Err(Error::InvalidInput),
-        }
+        Ok(sk)
     }
 }
 
@@ -265,19 +264,19 @@ pub fn sign(
     mechanism: std::os::raw::c_ulong,
 ) -> Result<Vec<u8>, Error> {
     init()?;
+    let data_signature = vec![0u8; 0x40];
+
+    let mut data_to_sign = SECItemBorrowed::wrap(data)?;
+    let mut signature = SECItemBorrowed::wrap(&data_signature)?;
     unsafe {
-        let data_signature = vec![0u8; 0x40];
-
-        let mut data_to_sign = SECItemBorrowed::wrap(&data)?;
-        let mut signature = SECItemBorrowed::wrap(&data_signature)?;
-
-        let rv = crate::p11::PK11_SignWithMechanism(
-            private_key.as_mut().unwrap(),
+        secstatus_to_res(crate::p11::PK11_SignWithMechanism(
+            private_key.as_mut().ok_or(Error::InvalidInput)?,
             mechanism,
             ptr::null_mut(),
             signature.as_mut(),
             data_to_sign.as_mut(),
-        );
+        ))
+        .expect("Signature has failed");
 
         let signature = signature.as_slice().to_vec();
         Ok(signature)
