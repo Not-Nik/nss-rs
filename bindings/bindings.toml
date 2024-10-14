@@ -223,6 +223,7 @@ functions = [
     "PK11_HPKE_ValidateParameters",
     "PK11_ImportDataKey",
     "PK11_ImportDERPrivateKeyInfoAndReturnKey",
+    "PK11_ImportPublicKey",
     "PK11_ImportSymKey",
     "PK11_PubDeriveWithKDF",
     "PK11_ReadRawAttribute",
