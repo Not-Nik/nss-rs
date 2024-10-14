@@ -19,11 +19,11 @@ use crate::{
     init,
     p11::{
         PK11ObjectType::PK11_TypePrivKey, PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPair,
-        PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_PubDeriveWithKDF, PK11_ReadRawAttribute,
-        SECKEY_DecodeDERSubjectPublicKeyInfo, Slot, KU_ALL,
+        PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_ImportPublicKey, PK11_PubDeriveWithKDF,
+        PK11_ReadRawAttribute, SECKEY_DecodeDERSubjectPublicKeyInfo, Slot, KU_ALL,
     },
     util::SECItemMut,
-    PrivateKey, PublicKey, SECItem, SECItemBorrowed,
+    PrivateKey, PublicKey, SECItem, SECItemBorrowed, PR_FALSE,
 };
 //
 // Constants
@@ -174,12 +174,17 @@ pub fn import_ec_public_key_from_spki(spki: &[u8]) -> Result<PublicKey, Error> {
     init()?;
     let mut spki_item = SECItemBorrowed::wrap(spki)?;
     let spki_item_ptr = spki_item.as_mut();
-
+    let slot = Slot::internal()?;
     unsafe {
         let spki = SECKEY_DecodeDERSubjectPublicKeyInfo(spki_item_ptr).into_result()?;
         let pk: PublicKey =
             crate::p11::SECKEY_ExtractPublicKey(spki.as_mut().ok_or(Error::InvalidInput)?)
                 .into_result()?;
+
+        let handle = PK11_ImportPublicKey(*slot, *pk, PR_FALSE);
+        if handle == pkcs11_bindings::CK_INVALID_HANDLE {
+            return Err(Error::InvalidInput);
+        }
 
         Ok(pk)
     }

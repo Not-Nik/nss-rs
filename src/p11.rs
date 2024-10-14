@@ -15,11 +15,11 @@ use std::{
     cell::RefCell,
     convert::TryFrom as _,
     fmt::{self, Debug, Formatter},
-    os::raw::c_uint,
     ptr::null_mut,
 };
 
-use pkcs11_bindings::CKA_VALUE;
+use pkcs11_bindings::{CKA_EC_POINT, CKA_VALUE};
+use PK11ObjectType::PK11_TypePubKey;
 
 use crate::{
     err::{secstatus_to_res, Error, Res},
@@ -84,18 +84,16 @@ impl PublicKey {
     ///
     /// When keys are too large to fit in `c_uint/usize`.  So only on programming error.
     pub fn key_data(&self) -> Res<Vec<u8>> {
-        let mut buf = vec![0; 100];
-        let mut len: c_uint = 0;
+        let mut key_item = SECItemMut::make_empty();
         secstatus_to_res(unsafe {
-            PK11_HPKE_Serialize(
-                **self,
-                buf.as_mut_ptr(),
-                &mut len,
-                c_uint::try_from(buf.len())?,
+            PK11_ReadRawAttribute(
+                PK11_TypePubKey,
+                (**self).cast(),
+                CKA_EC_POINT,
+                key_item.as_mut(),
             )
         })?;
-        buf.truncate(usize::try_from(len)?);
-        Ok(buf)
+        Ok(key_item.as_slice().to_owned())
     }
 }
 
@@ -124,6 +122,7 @@ impl PrivateKey {
     ///
     /// When the values are too large to fit.  So never.
     pub fn key_data(&self) -> Res<Vec<u8>> {
+        println!("Calling key_data Private key");
         let mut key_item = SECItemMut::make_empty();
         secstatus_to_res(unsafe {
             PK11_ReadRawAttribute(
