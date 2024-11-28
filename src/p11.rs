@@ -183,6 +183,10 @@ impl SymKey {
             Some(key) => Ok(unsafe { null_safe_slice(key.data, key.len) }),
         }
     }
+
+    pub fn as_bytes(&self) -> Res<&[u8]> {
+        self.key_data()
+    }
 }
 
 impl Debug for SymKey {
