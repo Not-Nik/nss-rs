@@ -13,7 +13,6 @@ use crate::p11::SymKey;
 use crate::PRBool;
 use crate::SECItem;
 use crate::{aead::AeadAlgorithms, err::Res, hkdf::HkdfAlgorithm};
-// use log::{log_enabled, trace};
 use std::{
     convert::TryFrom,
     ops::Deref,
@@ -264,7 +263,6 @@ pub fn generate_key_pair(kem: KemAlgorithm) -> Result<(PrivateKey, PublicKey), c
     let mut public_ptr: *mut p11::SECKEYPublicKey = null_mut();
     let params_item = SECItemBorrowed::wrap(params);
     let mut wrapped = params_item.as_ref() as *const _ as *mut _;
-    // let mut wrapped = Item::wrap(&params);
 
     // Try to make an insensitive key so that we can read the key data for tracing.
     let insensitive_secret_ptr = if log_enabled!(log::Level::Trace) {
@@ -272,7 +270,6 @@ pub fn generate_key_pair(kem: KemAlgorithm) -> Result<(PrivateKey, PublicKey), c
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
                 p11::CK_MECHANISM_TYPE::from(p11::CKM_EC_KEY_PAIR_GEN),
-                //addr_of_mut!(wrapped).cast(),
                 wrapped,
                 &mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_INSENSITIVE | p11::PK11_ATTR_PUBLIC,

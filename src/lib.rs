@@ -39,7 +39,6 @@ pub mod der;
 pub mod ec;
 pub mod hash;
 pub mod hmac;
-// pub mod hpke;
 pub mod p11;
 mod prio;
 mod replay;
