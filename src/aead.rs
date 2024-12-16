@@ -6,7 +6,7 @@
 
 use std::{
     convert::{TryFrom, TryInto},
-    fmt, mem,
+    fmt,
     os::raw::{c_char, c_int, c_uint},
     ptr::null_mut,
 };
@@ -242,8 +242,10 @@ impl fmt::Debug for RealAead {
 
 /// All the nonces are the same length.  Exploit that.
 pub const NONCE_LEN: usize = 12;
+
 /// The portion of the nonce that is a counter.
-const COUNTER_LEN: usize = mem::size_of::<SequenceNumber>();
+const COUNTER_LEN: usize = size_of::<SequenceNumber>();
+
 /// The NSS API insists on us identifying the tag separately, which is awful.
 /// All of the AEAD functions here have a tag of this length, so use a fixed offset.
 const TAG_LEN: usize = 16;
@@ -322,14 +324,8 @@ impl Aead {
         algorithm: AeadAlgorithms,
         key: &SymKey,
         nonce_base: [u8; NONCE_LEN],
-    ) -> Result<Self, crate::Error> {
+    ) -> Result<Self, Error> {
         crate::init()?;
-
-        // trace!(
-        //     "New AEAD: key={} nonce_base={}",
-        //     hex::encode(key.key_data()?),
-        //     hex::encode(nonce_base)
-        // );
 
         let ptr = unsafe {
             PK11_CreateContextBySymKey(
@@ -404,8 +400,8 @@ impl Aead {
                 c_int_len(aad.len())?,
                 pt.as_mut_ptr(),
                 &mut pt_len,
-                c_int_len(pt.len())?,                   // signed :(
-                ct.as_ptr().add(pt_expected) as *mut _, // const cast :(
+                c_int_len(pt.len())?,
+                ct.as_ptr().add(pt_expected).cast_mut(),
                 c_int_len(TAG_LEN)?,
                 ct.as_ptr(),
                 c_int_len(pt_expected)?,

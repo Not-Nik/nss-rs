@@ -122,7 +122,6 @@ impl PrivateKey {
     ///
     /// When the values are too large to fit.  So never.
     pub fn key_data(&self) -> Res<Vec<u8>> {
-        println!("Calling key_data Private key");
         let mut key_item = SECItemMut::make_empty();
         secstatus_to_res(unsafe {
             PK11_ReadRawAttribute(
