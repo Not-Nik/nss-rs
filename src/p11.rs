@@ -19,7 +19,7 @@ use std::{
     ptr::null_mut,
 };
 
-use pkcs11_bindings::CKA_VALUE;
+use pkcs11_bindings::{CKA_EC_POINT, CKA_VALUE};
 
 use crate::{
     err::{secstatus_to_res, Error, Res},
@@ -96,6 +96,19 @@ impl PublicKey {
         })?;
         buf.truncate(usize::try_from(len).map_err(|_| Error::IntegerOverflow)?);
         Ok(buf)
+    }
+
+    pub fn key_data_alt(&self) -> Res<Vec<u8>> {
+        let mut key_item = SECItemMut::make_empty();
+        secstatus_to_res(unsafe {
+            PK11_ReadRawAttribute(
+                PK11ObjectType::PK11_TypePubKey,
+                (**self).cast(),
+                CKA_EC_POINT,
+                key_item.as_mut(),
+            )
+        })?;
+        Ok(key_item.as_slice().to_owned())
     }
 }
 
