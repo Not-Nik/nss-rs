@@ -73,23 +73,6 @@ fn signed_cert_timestamp(fd: *mut PRFileDesc) -> Option<Vec<u8>> {
     })
 }
 
-impl CertificateInfo {
-    pub(crate) fn new(fd: *mut PRFileDesc) -> Option<Self> {
-        peer_certificate_chain(fd).map(|certs| Self {
-            certs,
-            stapled_ocsp_responses: stapled_ocsp_responses(fd),
-            signed_cert_timestamp: signed_cert_timestamp(fd),
-        })
-    }
-}
-
-impl CertificateInfo {
-    #[must_use]
-    pub fn iter(&self) -> ScopedSECItemArrayIterator<'_> {
-        self.certs.into_iter()
-    }
-}
-
 impl<'a> IntoIterator for &'a CertificateInfo {
     type IntoIter = ScopedSECItemArrayIterator<'a>;
     type Item = &'a [u8];
@@ -99,6 +82,19 @@ impl<'a> IntoIterator for &'a CertificateInfo {
 }
 
 impl CertificateInfo {
+    pub(crate) fn new(fd: *mut PRFileDesc) -> Option<Self> {
+        peer_certificate_chain(fd).map(|certs| Self {
+            certs,
+            stapled_ocsp_responses: stapled_ocsp_responses(fd),
+            signed_cert_timestamp: signed_cert_timestamp(fd),
+        })
+    }
+
+    #[must_use]
+    pub fn iter(&self) -> ScopedSECItemArrayIterator<'_> {
+        self.certs.into_iter()
+    }
+
     #[must_use]
     pub const fn stapled_ocsp_responses(&self) -> &Option<Vec<Vec<u8>>> {
         &self.stapled_ocsp_responses
