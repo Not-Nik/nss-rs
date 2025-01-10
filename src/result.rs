@@ -85,7 +85,7 @@ mod tests {
                 assert_eq!(code, -12273);
                 assert_eq!(
                     desc,
-                    "SSL received a record with an incorrect Message Authentication Code."
+                    "SSL received a record with an incorrect Message Authentication Code"
                 );
             }
             _ => unreachable!(),

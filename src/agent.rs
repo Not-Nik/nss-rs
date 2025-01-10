@@ -132,7 +132,7 @@ fn get_alpn(fd: *mut prio::PRFileDesc, pre: bool) -> Res<Option<String>> {
         }
         _ => None,
     };
-    trace!("[{fd:p}] got ALPN {:?}", alpn);
+    trace!("[{fd:p}] got ALPN {alpn:?}");
     Ok(alpn)
 }
 
@@ -756,7 +756,7 @@ impl SecretAgent {
         if let HandshakeState::Authenticated(err) = self.state {
             let result =
                 secstatus_to_res(unsafe { ssl::SSL_AuthCertificateComplete(self.fd, err) });
-            debug!("[{self}] SSL_AuthCertificateComplete: {:?}", result);
+            debug!("[{self}] SSL_AuthCertificateComplete: {result:?}");
             // This should return SECSuccess, so don't use update_state().
             self.capture_error(result)?;
         }
