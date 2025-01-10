@@ -9,7 +9,7 @@ use std::{
     convert::TryFrom,
     ffi::{CStr, CString},
     fmt::Write,
-    mem::{self, MaybeUninit},
+    mem::MaybeUninit,
     ops::{Deref, DerefMut},
     os::raw::{c_uint, c_void},
     pin::Pin,
@@ -160,7 +160,7 @@ impl SecretAgentPreInfo {
             ssl::SSL_GetPreliminaryChannelInfo(
                 fd,
                 info.as_mut_ptr(),
-                c_uint::try_from(mem::size_of::<ssl::SSLPreliminaryChannelInfo>())?,
+                c_uint::try_from(std::mem::size_of::<ssl::SSLPreliminaryChannelInfo>())?,
             )
         })?;
 
@@ -247,7 +247,7 @@ impl SecretAgentInfo {
             ssl::SSL_GetChannelInfo(
                 fd,
                 info.as_mut_ptr(),
-                c_uint::try_from(mem::size_of::<ssl::SSLChannelInfo>())?,
+                c_uint::try_from(std::mem::size_of::<ssl::SSLChannelInfo>())?,
             )
         })?;
         let info = unsafe { info.assume_init() };
@@ -901,7 +901,7 @@ impl Client {
             token,
             len,
             info.as_mut_ptr(),
-            c_uint::try_from(mem::size_of::<ssl::SSLResumptionTokenInfo>()).unwrap(),
+            c_uint::try_from(std::mem::size_of::<ssl::SSLResumptionTokenInfo>()).unwrap(),
         );
         if info_res.is_err() {
             // Ignore the token.
@@ -1037,7 +1037,7 @@ pub enum ZeroRttCheckResult {
 
 /// A `ZeroRttChecker` is used by the agent to validate the application token (as provided by
 /// `send_ticket`)
-pub trait ZeroRttChecker: std::fmt::Debug + std::marker::Unpin {
+pub trait ZeroRttChecker: std::fmt::Debug + Unpin {
     fn check(&self, token: &[u8]) -> ZeroRttCheckResult;
 }
 
@@ -1234,8 +1234,8 @@ impl ::std::fmt::Display for Server {
 /// A generic container for Client or Server.
 #[derive(Debug)]
 pub enum Agent {
-    Client(crate::agent::Client),
-    Server(crate::agent::Server),
+    Client(Client),
+    Server(Server),
 }
 
 impl Deref for Agent {
