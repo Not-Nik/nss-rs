@@ -145,7 +145,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     assert_eq!(secret_ptr.is_null(), public_ptr.is_null());
     let sk = unsafe { PrivateKey::from_ptr(secret_ptr) }?;
     let pk = unsafe { PublicKey::from_ptr(public_ptr) }?;
-    trace!("Generated key pair: sk={:?} pk={:?}", sk, pk);
+    trace!("Generated key pair: sk={sk:?} pk={pk:?}");
     Ok((sk, pk))
 }
 
