@@ -87,7 +87,7 @@ pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
             CK_MECHANISM_TYPE::from(CKM_HKDF_DERIVE),
             PK11Origin::PK11_OriginUnwrap,
             CK_ATTRIBUTE_TYPE::from(CKA_DERIVE),
-            SECItemBorrowed::wrap(buf).as_mut(),
+            SECItemBorrowed::wrap(buf)?.as_mut(),
             null_mut(),
         )
     };

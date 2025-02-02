@@ -5,6 +5,7 @@
 // except according to those terms.
 
 #![cfg(not(feature = "disable-encryption"))]
+#![cfg(test)]
 
 use nss_gk_api::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},

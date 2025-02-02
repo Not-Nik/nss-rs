@@ -106,7 +106,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     params.extend_from_slice(oid_slc);
 
     let mut public_ptr: *mut SECKEYPublicKey = null_mut();
-    let mut param_item = SECItemBorrowed::wrap(&params);
+    let mut param_item = SECItemBorrowed::wrap(&params)?;
 
     // If we have tracing on, try to ensure that key data can be read.
     let insensitive_secret_ptr = if log::log_enabled!(log::Level::Trace) {
