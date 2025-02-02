@@ -4,10 +4,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(dead_code)]
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
+#![allow(
+    dead_code,
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case,
+    clippy::unwrap_used
+)]
 
 use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint};
 
@@ -218,7 +221,7 @@ pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
 #[cfg(not(feature = "disable-random"))]
 pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
     let m_buf = buf.as_mut();
-    let len = std::os::raw::c_int::try_from(m_buf.len()).unwrap();
+    let len = std::os::raw::c_int::try_from(m_buf.len()).expect("usize fits into c_int");
     secstatus_to_res(unsafe { PK11_GenerateRandom(m_buf.as_mut_ptr(), len) }).unwrap();
     buf
 }

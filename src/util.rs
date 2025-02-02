@@ -5,10 +5,10 @@
 // except according to those terms.
 
 use std::{
-    convert::TryFrom as _, marker::PhantomData, mem, os::raw::c_uint, ptr::null_mut, slice::Iter,
+    convert::TryFrom as _, marker::PhantomData, os::raw::c_uint, ptr::null_mut, slice::Iter,
 };
 
-use crate::{nss_prelude::*, null_safe_slice, prtypes::*};
+use crate::{nss_prelude::*, null_safe_slice, prtypes::PRBool, Res};
 
 /// Implement a smart pointer for NSS objects.
 ///
@@ -278,15 +278,15 @@ impl<'a> SECItemBorrowed<'a> {
     /// Creating this object is technically safe, but using it is extremely dangerous.
     /// Minimally, it can only be passed as a `const SECItem*` argument to functions,
     /// or those that treat their argument as `const`.
-    pub fn wrap(buf: &'a [u8]) -> SECItemBorrowed<'a> {
-        SECItemBorrowed {
+    pub fn wrap(buf: &'a [u8]) -> Res<Self> {
+        Ok(Self {
             inner: SECItem {
                 type_: SECItemType::siBuffer,
                 data: buf.as_ptr().cast_mut(),
-                len: c_uint::try_from(buf.len()).unwrap(),
+                len: c_uint::try_from(buf.len())?,
             },
             phantom_data: PhantomData,
-        }
+        })
     }
 
     /// Create a `SECItemBorrowed` wrapping a struct.
@@ -294,15 +294,15 @@ impl<'a> SECItemBorrowed<'a> {
     /// Creating this object is technically safe, but using it is extremely dangerous.
     /// Minimally, it can only be passed as a `const SECItem*` argument to functions,
     /// or those that treat their argument as `const`.
-    pub fn wrap_struct<T>(v: &'a T) -> SECItemBorrowed<'a> {
+    pub fn wrap_struct<T>(v: &'a T) -> Res<Self> {
         let data: *const T = v;
-        SECItemBorrowed {
+        Ok(Self {
             inner: SECItem {
                 type_: SECItemType::siBuffer,
                 data: data.cast_mut().cast(),
-                len: c_uint::try_from(mem::size_of::<T>()).unwrap(),
+                len: c_uint::try_from(size_of::<T>())?,
             },
             phantom_data: PhantomData,
-        }
+        })
     }
 }
