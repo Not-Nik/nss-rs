@@ -12,7 +12,7 @@
     clippy::unwrap_used
 )]
 
-use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint};
+use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint, ptr};
 
 use pkcs11_bindings::CKA_VALUE;
 
@@ -188,6 +188,14 @@ impl std::fmt::Debug for SymKey {
             write!(f, "SymKey {}", hex_with_len(b))
         } else {
             write!(f, "Opaque SymKey")
+        }
+    }
+}
+
+impl Default for SymKey {
+    fn default() -> Self {
+        Self {
+            ptr: ptr::null_mut(),
         }
     }
 }
