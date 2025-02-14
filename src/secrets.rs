@@ -10,6 +10,7 @@ use std::{convert::TryFrom as _, mem, os::raw::c_void, pin::Pin};
 
 use enum_map::EnumMap;
 use log::debug;
+use strum::FromRepr;
 
 use crate::{
     agentio::as_c_void,
@@ -26,19 +27,17 @@ experimental_api!(SSL_SecretCallback(
     arg: *mut c_void,
 ));
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, FromRepr)]
+#[cfg_attr(windows, repr(i32))] // Windows has to be different, of coourse.
+#[cfg_attr(not(windows), repr(u32))]
 pub enum SecretDirection {
-    Read,
-    Write,
+    Read = SSLSecretDirection::ssl_secret_read,
+    Write = SSLSecretDirection::ssl_secret_write,
 }
 
 impl From<SSLSecretDirection::Type> for SecretDirection {
     fn from(dir: SSLSecretDirection::Type) -> Self {
-        match dir {
-            SSLSecretDirection::ssl_secret_read => Self::Read,
-            SSLSecretDirection::ssl_secret_write => Self::Write,
-            _ => unreachable!(),
-        }
+        Self::from_repr(dir).expect("Invalid secret direction")
     }
 }
 
