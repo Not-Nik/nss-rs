@@ -128,7 +128,6 @@ impl RecordList {
 
 impl Deref for RecordList {
     type Target = Vec<Record>;
-
     fn deref(&self) -> &Vec<Record> {
         &self.records
     }
@@ -146,7 +145,6 @@ impl Iterator for RecordListIter {
 impl IntoIterator for RecordList {
     type Item = Record;
     type IntoIter = RecordListIter;
-
     fn into_iter(self) -> Self::IntoIter {
         RecordListIter(self.records.into_iter())
     }
