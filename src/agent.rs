@@ -656,6 +656,7 @@ impl SecretAgent {
     }
 
     /// Return any fatal alert that the TLS stack might have sent.
+    #[allow(clippy::missing_const_for_fn)] // TODO: False positive on nightly. Check periodically if this can be removed.
     #[must_use]
     pub fn alert(&self) -> Option<&Alert> {
         (*self.alert).as_ref()
@@ -798,7 +799,7 @@ impl SecretAgent {
             unsafe {
                 prio::PR_Close(self.fd.cast());
             }
-        };
+        }
         let _output = self.io.take_output();
         self.fd = null_mut();
     }
@@ -822,6 +823,7 @@ impl SecretAgent {
     }
 
     /// Get the active ECH configuration, which is empty if ECH is disabled.
+    #[allow(clippy::missing_const_for_fn)] // TODO: False positive on nightly. Check periodically if this can be removed.
     #[must_use]
     pub fn ech_config(&self) -> &[u8] {
         &self.ech_config
@@ -940,6 +942,7 @@ impl Client {
         ssl::SECSuccess
     }
 
+    #[allow(clippy::missing_const_for_fn)] // TODO: False positive on nightly. Check periodically if this can be removed.
     #[must_use]
     pub fn server_name(&self) -> &str {
         &self.server_name
@@ -1017,7 +1020,6 @@ impl Client {
 
 impl Deref for Client {
     type Target = SecretAgent;
-
     fn deref(&self) -> &SecretAgent {
         &self.agent
     }
@@ -1226,7 +1228,6 @@ impl Server {
 
 impl Deref for Server {
     type Target = SecretAgent;
-
     fn deref(&self) -> &SecretAgent {
         &self.agent
     }
@@ -1253,7 +1254,6 @@ pub enum Agent {
 
 impl Deref for Agent {
     type Target = SecretAgent;
-
     fn deref(&self) -> &SecretAgent {
         match self {
             Self::Client(c) => c,
