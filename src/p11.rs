@@ -12,7 +12,7 @@
     clippy::unwrap_used
 )]
 
-use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint, ptr};
+use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint, ptr::null_mut};
 
 use pkcs11_bindings::CKA_VALUE;
 
@@ -34,7 +34,14 @@ pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
     ret
 }
 
-#[allow(clippy::unreadable_literal)]
+#[expect(
+    dead_code,
+    non_snake_case,
+    non_upper_case_globals,
+    non_camel_case_types,
+    clippy::unreadable_literal,
+    reason = "For included bindgen code."
+)]
 mod nss_p11 {
     #![allow(
         non_snake_case,
@@ -194,9 +201,7 @@ impl std::fmt::Debug for SymKey {
 
 impl Default for SymKey {
     fn default() -> Self {
-        Self {
-            ptr: ptr::null_mut(),
-        }
+        Self { ptr: null_mut() }
     }
 }
 
@@ -230,7 +235,7 @@ pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
 pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
     let m_buf = buf.as_mut();
     let len = std::os::raw::c_int::try_from(m_buf.len()).expect("usize fits into c_int");
-    secstatus_to_res(unsafe { PK11_GenerateRandom(m_buf.as_mut_ptr(), len) }).unwrap();
+    secstatus_to_res(unsafe { PK11_GenerateRandom(m_buf.as_mut_ptr(), len) }).expect("NSS failed");
     buf
 }
 

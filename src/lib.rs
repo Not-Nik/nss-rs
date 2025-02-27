@@ -87,9 +87,7 @@ pub mod nss_prelude {
 }
 pub use nss_prelude::{SECItem, SECItemArray, SECItemType, SECStatus};
 
-#[allow(non_upper_case_globals, clippy::redundant_static_lifetimes)]
-#[allow(clippy::upper_case_acronyms)]
-#[allow(unknown_lints, clippy::borrow_as_ptr)]
+#[expect(non_upper_case_globals, reason = "Code is bindgen-generated.")]
 mod nss {
     use crate::nss_prelude::*;
     include!(concat!(env!("OUT_DIR"), "/nss_init.rs"));
@@ -233,7 +231,7 @@ where
     if data.is_null() || len == 0 {
         &[]
     } else {
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods, reason = "This is non-null.")]
         std::slice::from_raw_parts(data, len)
     }
 }
