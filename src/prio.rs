@@ -4,8 +4,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(dead_code, non_upper_case_globals, non_snake_case)]
-#![allow(clippy::cognitive_complexity, clippy::too_many_lines)]
+#![allow(
+    dead_code,
+    non_upper_case_globals,
+    non_snake_case,
+    clippy::all,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction,
+    reason = "For included bindgen code."
+)]
 
 use crate::prtypes::{
     PRBool, PRInt16, PRInt32, PRInt64, PRIntn, PROffset32, PROffset64, PRSize, PRStatus, PRUint16,

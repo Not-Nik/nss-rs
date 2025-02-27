@@ -4,15 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(
-    dead_code,
-    non_camel_case_types,
-    non_upper_case_globals,
-    non_snake_case,
-    clippy::too_many_lines,
-    clippy::cognitive_complexity
-)]
-
 use std::os::raw::{c_uint, c_void};
 
 use crate::{
@@ -46,15 +37,18 @@ mod nss_ssl {
 }
 pub use nss_ssl::*;
 
+#[expect(non_snake_case, unused, reason = "OK here.")]
 mod SSLOption {
     include!(concat!(env!("OUT_DIR"), "/nss_sslopt.rs"));
 }
 
 // I clearly don't understand how bindgen operates.
-pub enum PLArenaPool {}
+// pub enum PLArenaPool {}
 
 // Remap some constants.
+#[expect(non_upper_case_globals, reason = "OK here.")]
 pub const SECSuccess: SECStatus = _SECStatus_SECSuccess;
+#[expect(non_upper_case_globals, reason = "OK here.")]
 pub const SECFailure: SECStatus = _SECStatus_SECFailure;
 
 #[derive(Debug, Copy, Clone)]
@@ -95,11 +89,6 @@ impl Opt {
     }
 }
 
-experimental_api!(SSL_GetCurrentEpoch(
-    fd: *mut PRFileDesc,
-    read_epoch: *mut u16,
-    write_epoch: *mut u16,
-));
 experimental_api!(SSL_HelloRetryRequestCallback(
     fd: *mut PRFileDesc,
     cb: SSLHelloRetryRequestCallback,

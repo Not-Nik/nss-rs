@@ -4,7 +4,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(clippy::unwrap_used)] // Let's assume the use of `unwrap` was checked when the use of `unsafe` was reviewed.
+#![expect(
+    clippy::unwrap_used,
+    reason = "Let's assume the use of `unwrap` was checked when the use of `unsafe` was reviewed."
+)]
 
 use std::{
     cmp::min,
@@ -187,7 +190,10 @@ impl AgentIoInput {
             return Err(Error::NoDataAvailable);
         }
 
-        #[allow(clippy::disallowed_methods)] // We just checked if this was empty.
+        #[expect(
+            clippy::disallowed_methods,
+            reason = "We just checked if this was empty."
+        )]
         let src = unsafe { std::slice::from_raw_parts(self.input, amount) };
         trace!("[{self}] read {}", hex(src));
         let dst = unsafe { std::slice::from_raw_parts_mut(buf, amount) };
@@ -337,7 +343,10 @@ unsafe extern "C" fn agent_available64(mut fd: PrFd) -> PRInt64 {
         .unwrap_or_else(|_| PR_FAILURE.into())
 }
 
-#[allow(clippy::cast_possible_truncation)]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "Cast is safe because prio::PR_AF_INET is 2."
+)]
 unsafe extern "C" fn agent_getname(_fd: PrFd, addr: *mut prio::PRNetAddr) -> PrStatus {
     let Some(a) = addr.as_mut() else {
         return PR_FAILURE;
