@@ -39,6 +39,7 @@ pub mod time;
 
 use std::{
     convert::TryFrom,
+    env,
     ffi::CString,
     path::{Path, PathBuf},
     ptr::null,
@@ -200,6 +201,9 @@ pub fn init() -> Res<()> {
 ///
 /// If NSS cannot be initialized.
 pub fn init_db<P: Into<PathBuf>>(dir: P) -> Res<()> {
+    // Allow overriding the NSS database path with an environment variable.
+    let dir = env::var("NSS_DB_PATH")
+        .unwrap_or(dir.into().to_str().ok_or(Error::InternalError)?.to_string());
     let res = INITIALIZED.get_or_init(|| init_once(Some(dir.into())));
     res.as_ref().map(|_| ()).map_err(Clone::clone)
 }
