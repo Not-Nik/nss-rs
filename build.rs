@@ -379,9 +379,11 @@ fn setup_standalone(nss_dir: String) -> Vec<String> {
         "cargo:rustc-link-search=native={}",
         nsslibdir.to_str().unwrap()
     );
-    #[expect(unexpected_cfgs, reason = "cargo-fuzz defines fuzzing")]
     // FIXME: NSPR doesn't build proper dynamic libraries on Windows.
-    if cfg!(any(debug_assertions, fuzzing)) || env::consts::OS == "windows" {
+    if env::var("CARGO_CFG_FUZZING").is_ok()
+        || env::var("DEBUG").is_ok()
+        || env::consts::OS == "windows"
+    {
         static_link();
     } else {
         dynamic_link();
