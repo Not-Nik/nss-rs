@@ -42,9 +42,6 @@ mod SSLOption {
     include!(concat!(env!("OUT_DIR"), "/nss_sslopt.rs"));
 }
 
-// I clearly don't understand how bindgen operates.
-// pub enum PLArenaPool {}
-
 // Remap some constants.
 #[expect(non_upper_case_globals, reason = "OK here.")]
 pub const SECSuccess: SECStatus = _SECStatus_SECSuccess;
