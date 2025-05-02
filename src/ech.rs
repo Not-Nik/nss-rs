@@ -115,7 +115,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
                 *slot,
                 p11::CK_MECHANISM_TYPE::from(CKM_EC_KEY_PAIR_GEN),
                 addr_of_mut!(param_item).cast(),
-                &mut public_ptr,
+                &raw mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_INSENSITIVE | p11::PK11_ATTR_PUBLIC,
                 p11::CK_FLAGS::from(CKF_DERIVE),
                 p11::CK_FLAGS::from(CKF_DERIVE),
@@ -132,7 +132,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
                 *slot,
                 p11::CK_MECHANISM_TYPE::from(CKM_EC_KEY_PAIR_GEN),
                 addr_of_mut!(param_item).cast(),
-                &mut public_ptr,
+                &raw mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_SENSITIVE | p11::PK11_ATTR_PRIVATE,
                 p11::CK_FLAGS::from(CKF_DERIVE),
                 p11::CK_FLAGS::from(CKF_DERIVE),
@@ -191,7 +191,7 @@ pub fn encode_config(config: u8, public_name: &str, pk: &PublicKey) -> Res<Vec<u
             SUITES.as_ptr(),
             c_uint::try_from(SUITES.len())?,
             encoded.as_mut_ptr(),
-            &mut encoded_len,
+            &raw mut encoded_len,
             c_uint::try_from(encoded.len())?,
         )?;
     }
