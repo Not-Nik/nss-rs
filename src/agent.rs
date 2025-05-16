@@ -17,7 +17,7 @@ use std::{
     cell::RefCell,
     convert::TryFrom,
     ffi::{CStr, CString},
-    fmt::Write,
+    fmt::{self, Debug, Display, Formatter, Write as _},
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
     os::raw::{c_uint, c_void},
@@ -853,8 +853,8 @@ impl Drop for SecretAgent {
     }
 }
 
-impl ::std::fmt::Display for SecretAgent {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+impl Display for SecretAgent {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "Agent {:p}", self.fd)
     }
 }
@@ -1051,8 +1051,8 @@ impl DerefMut for Client {
     }
 }
 
-impl ::std::fmt::Display for Client {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+impl Display for Client {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "Client {:p}", self.agent.fd)
     }
 }
@@ -1072,7 +1072,7 @@ pub enum ZeroRttCheckResult {
 
 /// A `ZeroRttChecker` is used by the agent to validate the application token (as provided by
 /// `send_ticket`)
-pub trait ZeroRttChecker: std::fmt::Debug + Unpin {
+pub trait ZeroRttChecker: Debug + Unpin {
     fn check(&self, token: &[u8]) -> ZeroRttCheckResult;
 }
 
@@ -1259,8 +1259,8 @@ impl DerefMut for Server {
     }
 }
 
-impl ::std::fmt::Display for Server {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+impl Display for Server {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "Server {:p}", self.agent.fd)
     }
 }
