@@ -11,8 +11,13 @@
     non_snake_case,
     clippy::unwrap_used
 )]
-
-use std::{cell::RefCell, convert::TryFrom, os::raw::c_uint, ptr::null_mut};
+use std::{
+    cell::RefCell,
+    convert::TryFrom as _,
+    fmt::{self, Debug, Formatter},
+    os::raw::c_uint,
+    ptr::null_mut,
+};
 
 use pkcs11_bindings::CKA_VALUE;
 
@@ -102,8 +107,8 @@ impl PublicKey {
     }
 }
 
-impl std::fmt::Debug for PublicKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Debug for PublicKey {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         if let Ok(b) = self.key_data() {
             write!(f, "PublicKey {}", hex_with_len(b))
         } else {
@@ -149,8 +154,8 @@ impl PrivateKey {
 }
 unsafe impl Send for PrivateKey {}
 
-impl std::fmt::Debug for PrivateKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Debug for PrivateKey {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         if let Ok(b) = self.key_data() {
             write!(f, "PrivateKey {}", hex_with_len(b))
         } else {
@@ -189,8 +194,8 @@ impl SymKey {
     }
 }
 
-impl std::fmt::Debug for SymKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Debug for SymKey {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         if let Ok(b) = self.as_bytes() {
             write!(f, "SymKey {}", hex_with_len(b))
         } else {
