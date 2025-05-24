@@ -31,7 +31,7 @@ pub struct CertificateInfo {
 
 fn peer_certificate_chain(fd: *mut PRFileDesc) -> Option<ScopedSECItemArray> {
     let mut chain_ptr: *mut SECItemArray = std::ptr::null_mut();
-    let rv = unsafe { SSL_PeerCertificateChainDER(fd, &raw mut chain_ptr) };
+    let rv = unsafe { SSL_PeerCertificateChainDER(fd, &mut chain_ptr) };
     if rv.is_ok() {
         unsafe { ScopedSECItemArray::from_ptr(chain_ptr).ok() }
     } else {
