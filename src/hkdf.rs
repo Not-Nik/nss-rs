@@ -137,7 +137,7 @@ pub fn expand_label(
             c_uint::try_from(handshake_hash.len())?,
             l.as_ptr().cast(),
             c_uint::try_from(l.len())?,
-            &raw mut secret,
+            &mut secret,
         )
     }?;
     unsafe { SymKey::from_ptr(secret) }

@@ -98,7 +98,7 @@ impl PublicKey {
             PK11_HPKE_Serialize(
                 **self,
                 buf.as_mut_ptr(),
-                &raw mut len,
+                &mut len,
                 c_uint::try_from(buf.len())?,
             )
         })?;
