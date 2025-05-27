@@ -79,3 +79,22 @@ pub fn now() -> Instant {
 pub fn anti_replay() -> AntiReplay {
     AntiReplay::new(earlier(), ANTI_REPLAY_WINDOW, 1, 3).expect("setup anti-replay")
 }
+
+/// Take a valid ECH config (as bytes) and produce a damaged version of the same.
+///
+/// This will appear valid, but it will contain a different ECH config ID.
+/// If given to a client, this should trigger an ECH retry.
+/// This only damages the config ID, which works as we only support one on our server.
+///
+/// # Panics
+/// When the provided `config` has the wrong version.
+#[must_use]
+pub fn damage_ech_config(config: &[u8]) -> Vec<u8> {
+    let mut cfg = config.to_owned();
+    // Ensure that the version is correct.
+    assert_eq!(cfg[2], 0xfe);
+    assert_eq!(cfg[3], 0x0d);
+    // Change the config_id so that the server doesn't recognize it.
+    cfg[6] ^= 0x94;
+    cfg
+}
