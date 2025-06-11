@@ -93,7 +93,7 @@ impl SelfEncrypt {
         // AAD covers the entire header, plus the value of the AAD parameter that is provided.
         let salt = random::<{ Self::SALT_LENGTH }>();
         let cipher = self.make_aead(&self.key, &salt)?;
-        let encoded_len = 2 + salt.len() + plaintext.len() + cipher.expansion();
+        let encoded_len = 2 + salt.len() + plaintext.len() + Aead::expansion();
 
         let mut enc = Vec::<u8>::with_capacity(encoded_len);
         enc.write_all(&[Self::VERSION])
@@ -143,10 +143,10 @@ impl SelfEncrypt {
     #[expect(clippy::similar_names, reason = "aad is similar to aead.")]
     pub fn open(&self, aad: &[u8], ciphertext: &[u8]) -> Res<Vec<u8>> {
         if ciphertext[0] != Self::VERSION {
-            return Err(Error::SelfEncryptFailure);
+            return Err(Error::SelfEncrypt);
         }
         let Some(key) = self.select_key(ciphertext[1]) else {
-            return Err(Error::SelfEncryptFailure);
+            return Err(Error::SelfEncrypt);
         };
         let offset = 2 + Self::SALT_LENGTH;
 
