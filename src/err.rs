@@ -60,6 +60,8 @@ pub type Res<T> = Result<T, Error>;
 #[derive(Clone, Debug, PartialEq, PartialOrd, Ord, Eq)]
 pub enum Error {
     Aead,
+    CertificateDecoding,
+    CertificateEncoding,
     CertificateLoading,
     CipherInit,
     CreateSslSocket,
@@ -68,6 +70,7 @@ pub enum Error {
     Internal,
     IntegerOverflow,
     InvalidEpoch,
+    InvalidCertificateCompressionID,
     MixedHandshakeMethod,
     NoDataAvailable,
     Nss {
