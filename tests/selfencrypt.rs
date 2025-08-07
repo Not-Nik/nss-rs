@@ -2,8 +2,8 @@
 #![warn(clippy::pedantic)]
 #![cfg(not(feature = "fuzzing"))]
 
-use neqo_crypto::constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
-use neqo_crypto::{init, selfencrypt::SelfEncrypt, Error};
+use nss_sys::constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
+use nss_sys::{init, selfencrypt::SelfEncrypt, Error};
 
 #[test]
 fn se_create() {

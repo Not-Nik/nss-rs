@@ -11,13 +11,27 @@
 
 use crate::err::{secstatus_to_res, Error, Res};
 
-use neqo_common::hex_with_len;
-
 use std::convert::TryFrom;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::{c_int, c_uint};
 use std::ptr::null_mut;
+
+// Remap some constants.
+pub const SECSuccess: SECStatus = _SECStatus_SECSuccess;
+pub const SECFailure: SECStatus = _SECStatus_SECFailure;
+
+#[must_use]
+pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
+    use std::fmt::Write as _;
+    let buf = buf.as_ref();
+    let mut ret = String::with_capacity(10 + buf.len() * 2);
+    write!(&mut ret, "[{}]: ", buf.len()).unwrap();
+    for b in buf {
+        write!(&mut ret, "{b:02x}").unwrap();
+    }
+    ret
+}
 
 #[allow(clippy::upper_case_acronyms)]
 #[allow(unknown_lints, deref_nullptr)] // Until bindgen#1651 is fixed.
@@ -51,7 +65,7 @@ macro_rules! scoped_ptr {
 
         impl Deref for $scoped {
             type Target = *mut $target;
-            #[must_use]
+
             fn deref(&self) -> &*mut $target {
                 &self.ptr
             }
@@ -100,7 +114,6 @@ impl PublicKey {
 }
 
 impl Clone for PublicKey {
-    #[must_use]
     fn clone(&self) -> Self {
         let ptr = unsafe { SECKEY_CopyPublicKey(self.ptr) };
         assert!(!ptr.is_null());
@@ -154,7 +167,6 @@ impl PrivateKey {
 unsafe impl Send for PrivateKey {}
 
 impl Clone for PrivateKey {
-    #[must_use]
     fn clone(&self) -> Self {
         let ptr = unsafe { SECKEY_CopyPrivateKey(self.ptr) };
         assert!(!ptr.is_null());
@@ -201,7 +213,6 @@ impl SymKey {
 }
 
 impl Clone for SymKey {
-    #[must_use]
     fn clone(&self) -> Self {
         let ptr = unsafe { PK11_ReferenceSymKey(self.ptr) };
         assert!(!ptr.is_null());

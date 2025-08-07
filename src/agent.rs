@@ -4,6 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use log::{debug, info, trace, warn};
+
 pub use crate::agentio::{as_c_void, Record, RecordList};
 use crate::agentio::{AgentIo, METHODS};
 use crate::assert_initialized;
@@ -15,17 +17,17 @@ use crate::constants::{
 use crate::ech;
 use crate::err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res};
 use crate::ext::{ExtensionHandler, ExtensionTracker};
-use crate::p11::{self, PrivateKey, PublicKey};
+use crate::p11::{self, hex_with_len, PrivateKey, PublicKey};
 use crate::prio;
 use crate::replay::AntiReplay;
 use crate::secrets::SecretHolder;
 use crate::ssl::{self, PRBool};
 use crate::time::{Time, TimeHolder};
 
-use neqo_common::{hex_snip_middle, hex_with_len, qdebug, qinfo, qtrace, qwarn};
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::ffi::{CStr, CString};
+use std::fmt::Write;
 use std::mem::{self, MaybeUninit};
 use std::ops::{Deref, DerefMut};
 use std::os::raw::{c_uint, c_void};
@@ -36,6 +38,26 @@ use std::time::Instant;
 
 /// The maximum number of tickets to remember for a given connection.
 const MAX_TICKETS: usize = 4;
+
+#[must_use]
+pub fn hex_snip_middle<A: AsRef<[u8]>>(buf: A) -> String {
+    const SHOW_LEN: usize = 8;
+    let buf = buf.as_ref();
+    if buf.len() <= SHOW_LEN * 2 {
+        hex_with_len(buf)
+    } else {
+        let mut ret = String::with_capacity(SHOW_LEN * 2 + 16);
+        write!(&mut ret, "[{}]: ", buf.len()).expect("write OK");
+        for b in &buf[..SHOW_LEN] {
+            write!(&mut ret, "{b:02x}").expect("write OK");
+        }
+        ret.push_str("..");
+        for b in &buf[buf.len() - SHOW_LEN..] {
+            write!(&mut ret, "{b:02x}").expect("write OK");
+        }
+        ret
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HandshakeState {
@@ -100,7 +122,7 @@ fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
         }
         _ => None,
     };
-    qtrace!([format!("{:p}", fd)], "got ALPN {:?}", alpn);
+    trace!("[{fd:p}] got ALPN {:?}", alpn);
     Ok(alpn)
 }
 
@@ -359,11 +381,7 @@ impl SecretAgent {
             if st.is_none() {
                 *st = Some(alert.description);
             } else {
-                qwarn!(
-                    [format!("{:p}", fd)],
-                    "duplicate alert {}",
-                    alert.description
-                );
+                warn!("[{fd:p}] duplicate alert {}", alert.description);
             }
         }
     }
@@ -418,7 +436,7 @@ impl SecretAgent {
     /// If NSS can't enable or disable ciphers.
     pub fn set_ciphers(&mut self, ciphers: &[Cipher]) -> Res<()> {
         if self.state != HandshakeState::New {
-            qwarn!([self], "Cannot enable ciphers in state {:?}", self.state);
+            warn!("[{self}] Cannot enable ciphers in state {:?}", self.state);
             return Err(Error::InternalError);
         }
 
@@ -611,7 +629,7 @@ impl SecretAgent {
     fn capture_error<T>(&mut self, res: Res<T>) -> Res<T> {
         if let Err(e) = res {
             let e = ech::convert_ech_error(self.fd, e);
-            qwarn!([self], "error: {:?}", e);
+            warn!("[{self}] error: {e:?}");
             self.state = HandshakeState::Failed(e.clone());
             Err(e)
         } else {
@@ -636,7 +654,7 @@ impl SecretAgent {
             let info = self.capture_error(SecretAgentInfo::new(self.fd))?;
             HandshakeState::Complete(info)
         };
-        qinfo!([self], "state -> {:?}", self.state);
+        info!("[{self}] state -> {:?}", self.state);
         Ok(())
     }
 
@@ -694,7 +712,7 @@ impl SecretAgent {
         if let HandshakeState::Authenticated(ref err) = self.state {
             let result =
                 secstatus_to_res(unsafe { ssl::SSL_AuthCertificateComplete(self.fd, *err) });
-            qdebug!([self], "SSL_AuthCertificateComplete: {:?}", result);
+            debug!("[{self}] SSL_AuthCertificateComplete: {:?}", result);
             // This should return SECSuccess, so don't use update_state().
             self.capture_error(result)?;
         }
@@ -858,11 +876,7 @@ impl Client {
         let len = usize::try_from(len).unwrap();
         let mut v = Vec::with_capacity(len);
         v.extend_from_slice(std::slice::from_raw_parts(token, len));
-        qinfo!(
-            [format!("{:p}", fd)],
-            "Got resumption token {}",
-            hex_snip_middle(&v)
-        );
+        info!("[{fd:p}] Got resumption token {}", hex_snip_middle(&v));
 
         if resumption.len() >= MAX_TICKETS {
             resumption.remove(0);
@@ -930,7 +944,10 @@ impl Client {
     /// Error returned when the configuration is invalid.
     pub fn enable_ech(&mut self, ech_config_list: impl AsRef<[u8]>) -> Res<()> {
         let config = ech_config_list.as_ref();
-        qdebug!([self], "Enable ECH for a server: {}", hex_with_len(&config));
+        debug!(
+            "[{self}] Enable ECH for a server: {}",
+            hex_with_len(&config)
+        );
         self.ech_config = Vec::from(config);
         if config.is_empty() {
             unsafe { ech::SSL_EnableTls13GreaseEch(self.agent.fd, PRBool::from(true)) }
@@ -948,7 +965,7 @@ impl Client {
 
 impl Deref for Client {
     type Target = SecretAgent;
-    #[must_use]
+
     fn deref(&self) -> &SecretAgent {
         &self.agent
     }
@@ -991,7 +1008,7 @@ pub trait ZeroRttChecker: std::fmt::Debug + std::marker::Unpin {
 pub struct AllowZeroRtt {}
 impl ZeroRttChecker for AllowZeroRtt {
     fn check(&self, _token: &[u8]) -> ZeroRttCheckResult {
-        qwarn!("AllowZeroRtt accepting 0-RTT");
+        warn!("AllowZeroRtt accepting 0-RTT");
         ZeroRttCheckResult::Accept
     }
 }
@@ -1142,7 +1159,7 @@ impl Server {
         pk: &PublicKey,
     ) -> Res<()> {
         let cfg = ech::encode_config(config, public_name, pk)?;
-        qdebug!([self], "Enable ECH for a server: {}", hex_with_len(&cfg));
+        debug!("[{self}] Enable ECH for a server: {}", hex_with_len(&cfg));
         unsafe {
             ech::SSL_SetServerEchConfigs(
                 self.agent.fd,
@@ -1159,7 +1176,7 @@ impl Server {
 
 impl Deref for Server {
     type Target = SecretAgent;
-    #[must_use]
+
     fn deref(&self) -> &SecretAgent {
         &self.agent
     }
@@ -1186,7 +1203,7 @@ pub enum Agent {
 
 impl Deref for Agent {
     type Target = SecretAgent;
-    #[must_use]
+
     fn deref(&self) -> &SecretAgent {
         match self {
             Self::Client(c) => &**c,
@@ -1205,14 +1222,12 @@ impl DerefMut for Agent {
 }
 
 impl From<Client> for Agent {
-    #[must_use]
     fn from(c: Client) -> Self {
         Self::Client(c)
     }
 }
 
 impl From<Server> for Agent {
-    #[must_use]
     fn from(s: Server) -> Self {
         Self::Server(s)
     }

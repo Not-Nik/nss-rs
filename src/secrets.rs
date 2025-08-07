@@ -4,13 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use log::debug;
+
 use crate::agentio::as_c_void;
 use crate::constants::Epoch;
 use crate::err::Res;
 use crate::p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey};
 use crate::ssl::{PRFileDesc, SSLSecretCallback, SSLSecretDirection};
 
-use neqo_common::qdebug;
 use std::os::raw::c_void;
 use std::pin::Pin;
 
@@ -27,7 +28,6 @@ pub enum SecretDirection {
 }
 
 impl From<SSLSecretDirection::Type> for SecretDirection {
-    #[must_use]
     fn from(dir: SSLSecretDirection::Type) -> Self {
         match dir {
             SSLSecretDirection::ssl_secret_read => Self::Read,
@@ -87,7 +87,7 @@ impl Secrets {
     }
 
     fn put(&mut self, dir: SecretDirection, epoch: Epoch, key: SymKey) {
-        qdebug!("{:?} secret available for {:?}: {:?}", dir, epoch, key);
+        debug!("{:?} secret available for {:?}: {:?}", dir, epoch, key);
         let keys = match dir {
             SecretDirection::Read => &mut self.r,
             SecretDirection::Write => &mut self.w,

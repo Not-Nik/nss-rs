@@ -1,0 +1,22 @@
+[package]
+name = "test-fixture"
+version = "0.1.0"
+authors = ["Martin Thomson <mt@lowentropy.net>"]
+edition = "2018"
+rust-version = "1.57.0"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+log = {version = "0.4.0", default-features = false}
+nss-sys = { path = "../" }
+
+[features]
+bench = ["nss-sys/bench"]
+disable-random = []
+
+[package.metadata.cargo-machete]
+ignored = ["log"]
+
+[lib]
+# See https://github.com/bheisler/criterion.rs/blob/master/book/src/faq.md#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
+bench = false

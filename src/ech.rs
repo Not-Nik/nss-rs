@@ -4,13 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use log::trace;
+
 use crate::err::{ssl::SSL_ERROR_ECH_RETRY_WITH_ECH, Error, Res};
 use crate::p11::{
     self, Item, PrivateKey, PublicKey, SECITEM_FreeItem, SECItem, SECKEYPrivateKey,
     SECKEYPublicKey, Slot,
 };
 use crate::ssl::{PRBool, PRFileDesc};
-use neqo_common::qtrace;
 use std::convert::TryFrom;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_uint};
@@ -137,7 +138,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     assert_eq!(secret_ptr.is_null(), public_ptr.is_null());
     let sk = PrivateKey::from_ptr(secret_ptr)?;
     let pk = PublicKey::from_ptr(public_ptr)?;
-    qtrace!("Generated key pair: sk={:?} pk={:?}", sk, pk);
+    trace!("Generated key pair: sk={:?} pk={:?}", sk, pk);
     Ok((sk, pk))
 }
 

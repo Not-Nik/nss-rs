@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use neqo_common::qinfo;
-use neqo_crypto::{
+use log::info;
+use nss_sys::{
     AntiReplay, AuthenticationStatus, Client, HandshakeState, RecordList, Res, ResumptionToken,
     SecretAgent, Server, ZeroRttCheckResult, ZeroRttChecker,
 };
@@ -59,8 +59,8 @@ fn handshake(now: Instant, client: &mut SecretAgent, server: &mut SecretAgent) {
 
 pub fn connect_at(now: Instant, client: &mut SecretAgent, server: &mut SecretAgent) {
     handshake(now, client, server);
-    qinfo!("client: {:?}", client.state());
-    qinfo!("server: {:?}", server.state());
+    info!("client: {:?}", client.state());
+    info!("server: {:?}", server.state());
     assert!(client.state().is_connected());
     assert!(server.state().is_connected());
 }
