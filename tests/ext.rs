@@ -1,9 +1,9 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-use neqo_crypto::constants::{HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS};
-use neqo_crypto::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
-use neqo_crypto::{Client, Server};
+use nss_sys::constants::{HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS};
+use nss_sys::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
+use nss_sys::{Client, Server};
 use std::cell::RefCell;
 use std::rc::Rc;
 use test_fixture::fixture_init;

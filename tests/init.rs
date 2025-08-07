@@ -8,7 +8,11 @@
 // a different version of init_db.  That causes explosions as they get
 // different versions of the Once instance they use and they initialize NSS
 // twice, probably likely in parallel.  That doesn't work out well.
-use neqo_crypto::{assert_initialized, init_db};
+use nss_sys::assert_initialized;
+#[cfg(nss_nodb)]
+use nss_sys::init;
+#[cfg(not(nss_nodb))]
+use nss_sys::init_db;
 
 // Pull in the NSS internals so that we can ask NSS if it thinks that
 // it is properly initialized.

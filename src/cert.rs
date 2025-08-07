@@ -4,13 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use log::error;
+
 use crate::err::secstatus_to_res;
 use crate::p11::{CERTCertListNode, CERT_GetCertificateDer, CertList, Item, SECItem, SECItemArray};
 use crate::ssl::{
     PRFileDesc, SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps,
     SSL_PeerStapledOCSPResponses,
 };
-use neqo_common::qerror;
 
 use std::convert::TryFrom;
 use std::ptr::{addr_of, NonNull};
@@ -45,7 +46,7 @@ fn stapled_ocsp_responses(fd: *mut PRFileDesc) -> Option<Vec<Vec<u8>>> {
             let len = if let Ok(l) = isize::try_from(unsafe { ocsp_ptr.as_ref().len }) {
                 l
             } else {
-                qerror!([format!("{:p}", fd)], "Received illegal OSCP length");
+                error!("[{fd:p}] Received illegal OSCP length");
                 return None;
             };
             for idx in 0..len {

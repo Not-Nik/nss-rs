@@ -6,11 +6,10 @@
 
 #![allow(clippy::upper_case_acronyms)]
 
-use crate::agentio::as_c_void;
 use crate::err::{Error, Res};
-use crate::once::OnceResult;
 use crate::ssl::{PRFileDesc, SSLTimeFunc};
 
+use once_cell::sync::OnceCell;
 use std::boxed::Box;
 use std::convert::{TryFrom, TryInto};
 use std::ops::Deref;
@@ -63,17 +62,16 @@ impl TimeZero {
     }
 }
 
-static mut BASE_TIME: OnceResult<TimeZero> = OnceResult::new();
+static BASE_TIME: OnceCell<TimeZero> = OnceCell::new();
 
 fn get_base() -> &'static TimeZero {
-    let f = || TimeZero {
+    BASE_TIME.get_or_init(|| TimeZero {
         instant: Instant::now(),
         prtime: unsafe { PR_Now() },
-    };
-    unsafe { BASE_TIME.call_once(f) }
+    })
 }
 
-pub(crate) fn init() {
+pub fn init() {
     let _ = get_base();
 }
 
@@ -94,8 +92,7 @@ impl From<Instant> for Time {
     /// Convert from an Instant into a Time.
     fn from(t: Instant) -> Self {
         // Call `TimeZero::baseline(t)` so that time zero can be set.
-        let f = || TimeZero::baseline(t);
-        let _ = unsafe { BASE_TIME.call_once(f) };
+        BASE_TIME.get_or_init(|| TimeZero::baseline(t));
         Self { t }
     }
 }
@@ -132,7 +129,6 @@ impl TryInto<PRTime> for Time {
 }
 
 impl From<Time> for Instant {
-    #[must_use]
     fn from(t: Time) -> Self {
         t.t
     }
@@ -185,8 +181,19 @@ impl TimeHolder {
         *p.as_ref().unwrap()
     }
 
+    #[expect(
+        clippy::not_unsafe_ptr_arg_deref,
+        clippy::ptr_as_ptr,
+        clippy::ref_as_ptr
+    )]
     pub fn bind(&mut self, fd: *mut PRFileDesc) -> Res<()> {
-        unsafe { SSL_SetTimeFunc(fd, Some(Self::time_func), as_c_void(&mut self.t)) }
+        unsafe {
+            SSL_SetTimeFunc(
+                fd,
+                Some(Self::time_func),
+                &mut *self.t as *mut _ as *mut c_void,
+            )
+        }
     }
 
     pub fn set(&mut self, t: Instant) -> Res<()> {

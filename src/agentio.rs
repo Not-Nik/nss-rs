@@ -4,12 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use log::trace;
+
 use crate::constants::{ContentType, Epoch};
 use crate::err::{nspr, Error, PR_SetError, Res};
+use crate::p11::hex_with_len;
 use crate::prio;
+use crate::selfencrypt::hex;
 use crate::ssl;
 
-use neqo_common::{hex, hex_with_len, qtrace};
 use std::cmp::min;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
@@ -51,7 +54,7 @@ impl Record {
 
     // Shoves this record into the socket, returns true if blocked.
     pub(crate) fn write(self, fd: *mut ssl::PRFileDesc) -> Res<()> {
-        qtrace!("write {:?}", self);
+        trace!("write {:?}", self);
         unsafe {
             ssl::SSL_RecordLayerData(
                 fd,
@@ -114,7 +117,7 @@ impl RecordList {
 
 impl Deref for RecordList {
     type Target = Vec<Record>;
-    #[must_use]
+
     fn deref(&self) -> &Vec<Record> {
         &self.records
     }
@@ -132,7 +135,7 @@ impl Iterator for RecordListIter {
 impl IntoIterator for RecordList {
     type Item = Record;
     type IntoIter = RecordListIter;
-    #[must_use]
+
     fn into_iter(self) -> Self::IntoIter {
         RecordListIter(self.records.into_iter())
     }
@@ -161,7 +164,7 @@ impl AgentIoInput {
         assert!(self.input.is_null());
         self.input = input.as_ptr();
         self.available = input.len();
-        qtrace!("AgentIoInput wrap {:p}", self.input);
+        trace!("AgentIoInput wrap {:p}", self.input);
         AgentIoInputContext { input: self }
     }
 
@@ -176,7 +179,7 @@ impl AgentIoInput {
         }
 
         let src = unsafe { std::slice::from_raw_parts(self.input, amount) };
-        qtrace!([self], "read {}", hex(src));
+        trace!("[{self}] read {}", hex(src));
         let dst = unsafe { std::slice::from_raw_parts_mut(buf, amount) };
         dst.copy_from_slice(src);
         self.input = self.input.wrapping_add(amount);
@@ -185,7 +188,7 @@ impl AgentIoInput {
     }
 
     fn reset(&mut self) {
-        qtrace!([self], "reset");
+        trace!("[{self}] reset");
         self.input = null();
         self.available = 0;
     }
@@ -230,12 +233,12 @@ impl AgentIo {
     // Stage output from TLS into the output buffer.
     fn save_output(&mut self, buf: *const u8, count: usize) {
         let slice = unsafe { std::slice::from_raw_parts(buf, count) };
-        qtrace!([self], "save output {}", hex(slice));
+        trace!("[{self}] save output {}", hex(slice));
         self.output.extend_from_slice(slice);
     }
 
     pub fn take_output(&mut self) -> Vec<u8> {
-        qtrace!([self], "take output");
+        trace!("[{self}] take output");
         mem::take(&mut self.output)
     }
 }

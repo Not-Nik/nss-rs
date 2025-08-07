@@ -1,12 +1,12 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-use neqo_crypto::constants::{
+use nss_sys::constants::{
     Cipher, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
     TLS_VERSION_1_3,
 };
-use neqo_crypto::hkdf;
-use neqo_crypto::hp::HpKey;
+use nss_sys::hkdf;
+use nss_sys::hp::HpKey;
 use std::mem;
 use test_fixture::fixture_init;
 
