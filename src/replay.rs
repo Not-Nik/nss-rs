@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use std::{
-    convert::{TryFrom, TryInto},
     os::raw::c_uint,
     ptr::null_mut,
     time::{Duration, Instant},
