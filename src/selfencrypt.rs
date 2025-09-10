@@ -109,7 +109,7 @@ impl SelfEncrypt {
             .unwrap_or_else(|_| unreachable!("Buffer has enough capacity."));
 
         let offset = enc.len();
-        let mut output: Vec<u8> = enc.into();
+        let mut output: Vec<u8> = enc;
         output.resize(encoded_len, 0);
         cipher.encrypt(0, extended_aad.as_ref(), plaintext, &mut output[offset..])?;
         trace!(
