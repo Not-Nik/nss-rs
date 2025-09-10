@@ -97,39 +97,42 @@ fn setup_clang() {
 }
 
 fn nss_dir() -> String {
-    let dir = if let Ok(dir) = env::var("NSS_DIR") {
-        let path = PathBuf::from(dir.trim());
-        assert!(
-            !path.is_relative(),
-            "The NSS_DIR environment variable is expected to be an absolute path."
-        );
-        path
-    } else {
-        let out_dir = env::var("OUT_DIR").unwrap();
-        let dir = Path::new(&out_dir).join("nss");
-        if !dir.exists() {
-            Command::new("hg")
-                .args([
-                    "clone",
-                    "https://hg.mozilla.org/projects/nss",
-                    dir.to_str().unwrap(),
-                ])
-                .status()
-                .expect("can't clone nss");
-        }
-        let nspr_dir = Path::new(&out_dir).join("nspr");
-        if !nspr_dir.exists() {
-            Command::new("hg")
-                .args([
-                    "clone",
-                    "https://hg.mozilla.org/projects/nspr",
-                    nspr_dir.to_str().unwrap(),
-                ])
-                .status()
-                .expect("can't clone nspr");
-        }
-        dir
-    };
+    let dir = env::var("NSS_DIR").map_or_else(
+        |_| {
+            let out_dir = env::var("OUT_DIR").unwrap();
+            let dir = Path::new(&out_dir).join("nss");
+            if !dir.exists() {
+                Command::new("hg")
+                    .args([
+                        "clone",
+                        "https://hg.mozilla.org/projects/nss",
+                        dir.to_str().unwrap(),
+                    ])
+                    .status()
+                    .expect("can't clone nss");
+            }
+            let nspr_dir = Path::new(&out_dir).join("nspr");
+            if !nspr_dir.exists() {
+                Command::new("hg")
+                    .args([
+                        "clone",
+                        "https://hg.mozilla.org/projects/nspr",
+                        nspr_dir.to_str().unwrap(),
+                    ])
+                    .status()
+                    .expect("can't clone nspr");
+            }
+            dir
+        },
+        |dir| {
+            let path = PathBuf::from(dir.trim());
+            assert!(
+                !path.is_relative(),
+                "The NSS_DIR environment variable is expected to be an absolute path."
+            );
+            path
+        },
+    );
     assert!(dir.is_dir(), "NSS_DIR {} doesn't exist", dir.display());
     // Note that this returns a relative path because UNC
     // paths on windows cause certain tools to explode.
