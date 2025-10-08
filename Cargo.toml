@@ -124,7 +124,7 @@ unwrap_used = "warn"
 verbose_file_reads = "warn"
 
 [features]
-bench = []
+bench = ["log/release_max_level_info"]
 deny-warnings = []
 disable-encryption = []
 disable-random = []
