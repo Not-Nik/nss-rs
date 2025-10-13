@@ -129,6 +129,8 @@ deny-warnings = []
 disable-encryption = []
 disable-random = []
 gecko = ["mozbuild"]
+# Dummy feature so we can run sanitize workflow from neqo
+ci = []
 
 [lib]
 # See https://github.com/bheisler/criterion.rs/blob/master/book/src/faq.md#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
