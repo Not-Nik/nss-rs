@@ -1,0 +1,8 @@
+name: Do Nothing
+
+runs:
+  using: composite
+  steps:
+    - name: noop
+      shell: bash
+      run: true
