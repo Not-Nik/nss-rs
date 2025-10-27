@@ -9,7 +9,7 @@
 
 use nss_rs::{
     constants::{Cipher, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
-    hkdf, Aead, AeadTrait as _,
+    hkdf, Aead,
 };
 use test_fixture::fixture_init;
 

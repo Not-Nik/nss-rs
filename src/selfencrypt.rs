@@ -9,7 +9,6 @@ use std::{fmt::Write as _, io::Write as _, mem};
 use log::{info, trace};
 
 use crate::{
-    aead::AeadTrait as _,
     constants::{Cipher, Version},
     err::{Error, Res},
     hkdf,
