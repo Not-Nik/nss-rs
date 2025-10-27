@@ -17,8 +17,6 @@
 #![allow(clippy::missing_safety_doc)]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-#[cfg(feature = "disable-encryption")]
-pub mod aead_null;
 pub mod agent;
 mod agentio;
 mod auth;
@@ -59,14 +57,7 @@ use std::{
 use log::error;
 use once_cell::sync::OnceCell;
 
-#[cfg(not(feature = "disable-encryption"))]
-pub use self::aead::RealAead as Aead;
-#[cfg(feature = "disable-encryption")]
-pub use self::aead::RealAead;
-#[cfg(feature = "disable-encryption")]
-pub use self::aead_null::AeadNull as Aead;
 pub use self::{
-    aead::AeadTrait,
     agent::{
         Agent, AllowZeroRtt, Client, HandshakeState, Record, RecordList, ResumptionToken,
         SecretAgent, SecretAgentInfo, SecretAgentPreInfo, Server, ZeroRttCheckResult,
@@ -83,7 +74,7 @@ pub use self::{
     p11::{random, randomize, PrivateKey, PublicKey, SymKey},
     replay::AntiReplay,
     secrets::SecretDirection,
-    ssl::Opt,
+    ssl::{Aead, Opt},
     util::*,
 };
 
