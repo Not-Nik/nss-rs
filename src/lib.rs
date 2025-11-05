@@ -90,9 +90,13 @@ pub use self::{
 mod min_version;
 use min_version::MINIMUM_NSS_VERSION;
 
-#[expect(non_snake_case)]
-#[expect(non_upper_case_globals)]
 pub mod nss_prelude {
+    #![allow(
+        non_snake_case,
+        non_upper_case_globals,
+        clippy::restriction,
+        reason = "For included bindgen code."
+    )]
     pub use _SECStatus::*;
 
     pub use crate::prtypes::*;
