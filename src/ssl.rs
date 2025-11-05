@@ -19,6 +19,7 @@ mod nss_ssl {
         non_upper_case_globals,
         non_snake_case,
         nonstandard_style,
+        unused_qualifications,
         clippy::all,
         clippy::nursery,
         clippy::pedantic,
