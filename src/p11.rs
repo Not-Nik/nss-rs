@@ -44,6 +44,7 @@ mod nss_p11 {
         non_snake_case,
         non_upper_case_globals,
         non_camel_case_types,
+        unused_qualifications,
         clippy::all,
         clippy::nursery,
         clippy::pedantic,
