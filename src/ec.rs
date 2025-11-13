@@ -212,8 +212,7 @@ pub fn import_ec_private_key_pkcs8(pki: &[u8]) -> Result<PrivateKey, Error> {
             KU_ALL,
             &mut pk_ptr,
             ptr::null_mut(),
-        ))
-        .expect("PKCS8 encoded key import has failed");
+        ))?;
 
         let sk = EcdhPrivateKey::from_ptr(pk_ptr)?;
         Ok(sk)
@@ -278,8 +277,7 @@ pub fn sign(
             ptr::null_mut(),
             signature.as_mut(),
             data_to_sign.as_mut(),
-        ))
-        .expect("Signature has failed");
+        ))?;
 
         let signature = signature.as_slice().to_vec();
         Ok(signature)
