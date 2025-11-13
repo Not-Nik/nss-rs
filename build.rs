@@ -356,7 +356,7 @@ fn pkg_config() -> Result<Vec<String>, Box<dyn Error>> {
 
     let modversion_for_cmp = Version::parse(&modversion_for_cmp)?;
 
-    let version_req = VersionReq::parse(&format!(">={}", MINIMUM_NSS_VERSION.trim())).unwrap();
+    let version_req = VersionReq::parse(&format!(">={}", MINIMUM_NSS_VERSION.trim()))?;
 
     assert!(
         version_req.matches(&modversion_for_cmp),
