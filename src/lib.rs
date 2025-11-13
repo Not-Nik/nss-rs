@@ -47,6 +47,12 @@ use std::{
 use log::error;
 use once_cell::sync::OnceCell;
 
+#[cfg(windows)]
+#[expect(unused_imports, reason = "Force Advapi32 linkage")]
+mod _link_anchor {
+    use windows::Win32::Security::Authentication::Identity::RtlGenRandom as _;
+}
+
 #[cfg(not(feature = "disable-encryption"))]
 pub use self::aead::RealAead as Aead;
 #[cfg(feature = "disable-encryption")]

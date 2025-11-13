@@ -544,10 +544,6 @@ fn process_config(config: &mut HashMap<String, Bindings>) {
 fn main() {
     println!("cargo:rustc-check-cfg=cfg(nss_nodb)");
 
-    if env::consts::OS == "windows" {
-        println!("cargo:rustc-link-lib=advapi32");
-    }
-
     let flags = if cfg!(feature = "gecko") {
         setup_for_gecko()
     } else if let Ok(nss_dir) = env::var("NSS_DIR") {

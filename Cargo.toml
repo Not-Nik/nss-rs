@@ -21,6 +21,9 @@ pkcs11-bindings = ">= 0.1.3"
 strum = { version = "0.27", default-features = false, features = ["derive"] }
 thiserror = "2.0.12"
 
+[target.'cfg(windows)'.dependencies]
+windows = { version = ">=0.60,<0.63", features = ["Win32_Security_Authentication_Identity"]}
+
 [build-dependencies]
 bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
 mozbuild = { version = "0.1", default-features = false, optional = true }
@@ -33,7 +36,7 @@ toml = { version = "0.9", default-features = false, features = ["parse", "serde"
 test-fixture = {path = "test-fixture"}
 
 [package.metadata.cargo-machete]
-ignored = ["bindgen", "semver", "serde", "serde_derive", "toml"]
+ignored = ["bindgen", "semver", "serde", "serde_derive", "toml", "windows"]
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
