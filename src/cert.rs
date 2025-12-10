@@ -43,7 +43,7 @@ fn peer_certificate_chain(fd: *mut PRFileDesc) -> Option<ScopedSECItemArray> {
 // 2^24 items. Casting its length is therefore safe even on 32 bits targets.
 fn stapled_ocsp_responses(fd: *mut PRFileDesc) -> Option<Vec<Vec<u8>>> {
     let ocsp_nss = unsafe { SSL_PeerStapledOCSPResponses(fd) };
-    let ocsp_ptr = NonNull::new(ocsp_nss as *mut SECItemArray)?;
+    let ocsp_ptr = NonNull::new(ocsp_nss.cast_mut())?;
     let Ok(len) = usize::try_from(unsafe { ocsp_ptr.as_ref().len }) else {
         error!("[{fd:p}] Received illegal OCSP length");
         return None;
