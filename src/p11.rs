@@ -11,13 +11,7 @@
     non_snake_case,
     clippy::unwrap_used
 )]
-use std::{
-    cell::RefCell,
-    convert::TryFrom as _,
-    fmt::{self, Debug, Formatter},
-    os::raw::c_uint,
-    ptr::null_mut,
-};
+use std::{cell::RefCell, convert::TryFrom as _, fmt::Debug, os::raw::c_uint, ptr::null_mut};
 
 use pkcs11_bindings::{CKA_EC_POINT, CKA_VALUE};
 
@@ -110,17 +104,12 @@ impl PublicKey {
     }
 }
 
-impl Debug for PublicKey {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if let Ok(b) = self.key_data() {
-            write!(f, "PublicKey {}", hex_with_len(b))
-        } else {
-            write!(f, "Opaque PublicKey")
-        }
-    }
-}
-
-scoped_ptr!(PrivateKey, SECKEYPrivateKey, SECKEY_DestroyPrivateKey);
+scoped_ptr!(
+    PrivateKey,
+    SECKEYPrivateKey,
+    SECKEY_DestroyPrivateKey,
+    key_data
+);
 impl_clone!(PrivateKey, SECKEY_CopyPrivateKey);
 
 impl PrivateKey {
@@ -157,16 +146,6 @@ impl PrivateKey {
 }
 unsafe impl Send for PrivateKey {}
 
-impl Debug for PrivateKey {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if let Ok(b) = self.key_data() {
-            write!(f, "PrivateKey {}", hex_with_len(b))
-        } else {
-            write!(f, "Opaque PrivateKey")
-        }
-    }
-}
-
 scoped_ptr!(Slot, PK11SlotInfo, PK11_FreeSlot);
 
 impl Slot {
@@ -176,7 +155,7 @@ impl Slot {
 }
 
 // Note: PK11SymKey is internally reference counted
-scoped_ptr!(SymKey, PK11SymKey, PK11_FreeSymKey);
+scoped_ptr!(SymKey, PK11SymKey, PK11_FreeSymKey, as_bytes);
 impl_clone!(SymKey, PK11_ReferenceSymKey);
 
 impl SymKey {
@@ -198,16 +177,6 @@ impl SymKey {
 
     pub fn as_bytes(&self) -> Res<&[u8]> {
         self.key_data()
-    }
-}
-
-impl Debug for SymKey {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        if let Ok(b) = self.key_data() {
-            write!(f, "SymKey {}", hex_with_len(b))
-        } else {
-            write!(f, "Opaque SymKey")
-        }
     }
 }
 
