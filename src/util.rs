@@ -18,11 +18,42 @@ use crate::{nss_prelude::*, null_safe_slice, Res};
 /// Named "scoped" because that is what NSS calls its `unique_ptr` typedefs.
 #[macro_export]
 macro_rules! scoped_ptr {
-    ($name:ident, $target:ty, $dtor:path) => {
+    // With custom debug method
+    ($name:ident, $target:ty, $dtor:path, $debug_method:ident) => {
         pub struct $name {
             ptr: *mut $target,
         }
 
+        impl $name {
+            fn debug_display(&self) -> String {
+                self.$debug_method().map_or_else(
+                    |_| concat!("Opaque ", stringify!($name)).to_string(),
+                    |b| format!(concat!(stringify!($name), " {}"), hex_with_len(b))
+                )
+            }
+        }
+
+        impl std::fmt::Debug for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.debug_display())
+            }
+        }
+
+        scoped_ptr!(@impls $name, $target, $dtor);
+    };
+
+    // Without custom debug method
+    ($name:ident, $target:ty, $dtor:path) => {
+        #[derive(Debug)]
+        pub struct $name {
+            ptr: *mut $target,
+        }
+
+        scoped_ptr!(@impls $name, $target, $dtor);
+    };
+
+    // Common implementations
+    (@impls $name:ident, $target:ty, $dtor:path) => {
         impl $name {
             /// Create a new instance of `$name` from a pointer.
             ///
