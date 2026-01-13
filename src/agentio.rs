@@ -348,7 +348,7 @@ unsafe extern "C" fn agent_available64(mut fd: PrFd) -> PRInt64 {
     clippy::cast_possible_truncation,
     reason = "Cast is safe because prio::PR_AF_INET is 2."
 )]
-unsafe extern "C" fn agent_getname(_fd: PrFd, addr: *mut prio::PRNetAddr) -> PrStatus {
+const unsafe extern "C" fn agent_getname(_fd: PrFd, addr: *mut prio::PRNetAddr) -> PrStatus {
     let Some(a) = addr.as_mut() else {
         return PR_FAILURE;
     };
@@ -359,7 +359,10 @@ unsafe extern "C" fn agent_getname(_fd: PrFd, addr: *mut prio::PRNetAddr) -> PrS
     PR_SUCCESS
 }
 
-unsafe extern "C" fn agent_getsockopt(_fd: PrFd, opt: *mut prio::PRSocketOptionData) -> PrStatus {
+const unsafe extern "C" fn agent_getsockopt(
+    _fd: PrFd,
+    opt: *mut prio::PRSocketOptionData,
+) -> PrStatus {
     if let Some(o) = opt.as_mut() {
         if o.option == prio::PRSockOption_PR_SockOpt_Nonblocking {
             o.value.non_blocking = 1;
