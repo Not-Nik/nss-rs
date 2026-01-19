@@ -15,9 +15,4 @@
     reason = "For included bindgen code."
 )]
 
-use crate::prtypes::{
-    PRBool, PRInt16, PRInt32, PRInt64, PRIntn, PROffset32, PROffset64, PRSize, PRStatus, PRUint16,
-    PRUint32, PRUint64, PRUint8, PRUintn,
-};
-
 include!(concat!(env!("OUT_DIR"), "/nspr_io.rs"));

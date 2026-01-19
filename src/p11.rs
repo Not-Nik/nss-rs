@@ -51,16 +51,13 @@ mod nss_p11 {
         clippy::restriction,
         reason = "For included bindgen code."
     )]
-    use crate::{
-        nss_prelude::*,
-        prtypes::{PRBool, PRInt32, PRUint32, PRUint8, PRUword},
-    };
+    use crate::nss_prelude::*;
     include!(concat!(env!("OUT_DIR"), "/nss_p11.rs"));
 }
 
 pub use nss_p11::*;
 
-use crate::{null_safe_slice, prtypes::PRBool};
+use crate::null_safe_slice;
 
 scoped_ptr!(Certificate, CERTCertificate, CERT_DestroyCertificate);
 scoped_ptr!(CertList, CERTCertList, CERT_DestroyCertList);

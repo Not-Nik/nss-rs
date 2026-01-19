@@ -21,7 +21,6 @@ use once_cell::sync::OnceCell;
 
 use crate::{
     err::{Error, Res},
-    nss_prelude::PRInt64,
     prio::PRFileDesc,
     ssl::SSLTimeFunc,
 };
