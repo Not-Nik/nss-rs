@@ -22,8 +22,9 @@ use crate::{
         PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_ImportPublicKey, PK11_PubDeriveWithKDF,
         PK11_ReadRawAttribute, SECKEY_DecodeDERSubjectPublicKeyInfo, Slot, KU_ALL,
     },
+    ssl::PRBool,
     util::SECItemMut,
-    PrivateKey, PublicKey, SECItem, SECItemBorrowed, PR_FALSE,
+    PrivateKey, PublicKey, SECItem, SECItemBorrowed,
 };
 //
 // Constants
@@ -181,7 +182,7 @@ pub fn import_ec_public_key_from_spki(spki: &[u8]) -> Result<PublicKey, Error> {
             crate::p11::SECKEY_ExtractPublicKey(spki.as_mut().ok_or(Error::InvalidInput)?)
                 .into_result()?;
 
-        let handle = PK11_ImportPublicKey(*slot, *pk, PR_FALSE);
+        let handle = PK11_ImportPublicKey(*slot, *pk, PRBool::from(false));
         if handle == pkcs11_bindings::CK_INVALID_HANDLE {
             return Err(Error::InvalidInput);
         }

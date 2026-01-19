@@ -22,9 +22,9 @@ use crate::{
     agentio::as_c_void,
     constants::{Extension, HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS},
     err::Res,
+    nss_prelude::PRBool,
     null_safe_slice,
     prio::PRFileDesc,
-    prtypes::PRBool,
     ssl::{
         SECFailure, SECSuccess, SSLAlertDescription, SSLExtensionHandler, SSLExtensionWriter,
         SSLHandshakeType,

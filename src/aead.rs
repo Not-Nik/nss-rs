@@ -19,9 +19,8 @@ use crate::{
         CKA_ENCRYPT, CKA_NSS_MESSAGE, CKG_GENERATE_COUNTER_XOR, CKG_NO_GENERATE, CKM_AES_GCM,
         CKM_CHACHA20_POLY1305, CK_ATTRIBUTE_TYPE, CK_GENERATOR_FUNCTION, CK_MECHANISM_TYPE,
     },
-    prtypes::{PRUint16, PRUint64, PRUint8},
     scoped_ptr, secstatus_to_res,
-    ssl::SSLAeadContext,
+    ssl::{PRUint16, PRUint64, PRUint8, SSLAeadContext},
     SECItemBorrowed, SymKey,
 };
 

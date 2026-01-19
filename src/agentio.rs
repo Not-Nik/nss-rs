@@ -27,16 +27,17 @@ use crate::{
     err::{nspr, Error, PR_SetError, Res},
     null_safe_slice,
     p11::hex_with_len,
-    prio, prtypes,
+    prio,
     selfencrypt::hex,
-    ssl, PRInt32, PRInt64, PRIntn, PRUint16, PRUint8, SECStatus,
+    ssl::{self, PRInt32, PRInt64, PRIntn, PRUint16, PRUint8},
+    SECStatus,
 };
 
 // Alias common types.
 type PrFd = *mut prio::PRFileDesc;
-type PrStatus = prtypes::PRStatus;
-const PR_SUCCESS: PrStatus = prtypes::PR_SUCCESS;
-const PR_FAILURE: PrStatus = prtypes::PR_FAILURE;
+type PrStatus = prio::PRStatus::Type;
+const PR_SUCCESS: PrStatus = prio::PRStatus::PR_SUCCESS;
+const PR_FAILURE: PrStatus = prio::PRStatus::PR_FAILURE;
 
 /// Convert a pinned, boxed object into a void pointer.
 pub fn as_c_void<T: Unpin>(pin: &mut Pin<Box<T>>) -> *mut c_void {
@@ -352,16 +353,16 @@ unsafe extern "C" fn agent_getname(_fd: PrFd, addr: *mut prio::PRNetAddr) -> PrS
         return PR_FAILURE;
     };
     // Cast is safe because prio::PR_AF_INET is 2
-    a.inet.as_mut().family = prio::PR_AF_INET as PRUint16;
-    a.inet.as_mut().port = 0;
-    a.inet.as_mut().ip = 0;
+    a.inet.family = prio::PR_AF_INET as PRUint16;
+    a.inet.port = 0;
+    a.inet.ip = 0;
     PR_SUCCESS
 }
 
 unsafe extern "C" fn agent_getsockopt(_fd: PrFd, opt: *mut prio::PRSocketOptionData) -> PrStatus {
     if let Some(o) = opt.as_mut() {
         if o.option == prio::PRSockOption_PR_SockOpt_Nonblocking {
-            *o.value.non_blocking.as_mut() = 1;
+            o.value.non_blocking = 1;
             return PR_SUCCESS;
         }
     }

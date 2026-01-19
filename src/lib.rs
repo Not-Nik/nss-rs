@@ -99,7 +99,6 @@ pub mod nss_prelude {
     )]
     pub use _SECStatus::*;
 
-    pub use crate::prtypes::*;
     include!(concat!(env!("OUT_DIR"), "/nss_prelude.rs"));
 }
 pub use nss_prelude::{SECItem, SECItemArray, SECItemType, SECStatus};
@@ -109,15 +108,6 @@ mod nss {
     use crate::nss_prelude::*;
     include!(concat!(env!("OUT_DIR"), "/nss_init.rs"));
 }
-
-pub mod prtypes;
-pub use prtypes::*;
-
-// Shadow these bindgen created values to correct their type.
-#[expect(clippy::cast_possible_wrap)]
-pub const PR_FALSE: PRBool = prtypes::PR_FALSE as PRBool;
-#[expect(clippy::cast_possible_wrap)]
-pub const PR_TRUE: PRBool = prtypes::PR_TRUE as PRBool;
 
 enum NssLoaded {
     External,
