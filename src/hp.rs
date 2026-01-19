@@ -100,7 +100,7 @@ impl Key {
                 &mut secret,
             )
         }?;
-        let key = unsafe { SymKey::from_ptr(secret).or(Err(Error::Hkdf)) }?;
+        let key = SymKey::from_ptr(secret).or(Err(Error::Hkdf))?;
 
         let res = match cipher {
             TLS_AES_128_GCM_SHA256 | TLS_AES_256_GCM_SHA384 => {
@@ -113,7 +113,7 @@ impl Key {
                                                                       * slice of ZERO. */
                     )
                 };
-                let context = unsafe { Context::from_ptr(context_ptr).or(Err(Error::CipherInit)) }?;
+                let context = Context::from_ptr(context_ptr).or(Err(Error::CipherInit))?;
                 Self::Aes(Rc::new(RefCell::new(context)))
             }
             TLS_CHACHA20_POLY1305_SHA256 => Self::Chacha(key),
