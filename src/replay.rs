@@ -68,7 +68,7 @@ impl AntiReplay {
         }?;
 
         Ok(Self {
-            ctx: unsafe { AntiReplayContext::from_ptr(ctx) }?,
+            ctx: AntiReplayContext::from_ptr(ctx)?,
         })
     }
 

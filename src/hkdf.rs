@@ -154,7 +154,7 @@ pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
             null_mut(),
         )
     };
-    unsafe { SymKey::from_ptr(key_ptr) }
+    SymKey::from_ptr(key_ptr)
 }
 
 /// Extract a PRK from the given salt and IKM using the algorithm defined in RFC 5869.
@@ -171,7 +171,7 @@ pub fn extract(
     let mut prk: *mut PK11SymKey = null_mut();
     let salt_ptr: *mut PK11SymKey = salt.map_or(null_mut(), |s| **s);
     unsafe { SSL_HkdfExtract(version, cipher, salt_ptr, **ikm, &mut prk) }?;
-    unsafe { SymKey::from_ptr(prk) }
+    SymKey::from_ptr(prk)
 }
 
 /// Expand a PRK using the HKDF-Expand-Label function defined in RFC 8446.
@@ -203,7 +203,7 @@ pub fn expand_label(
             &mut secret,
         )
     }?;
-    unsafe { SymKey::from_ptr(secret) }
+    SymKey::from_ptr(secret)
 }
 
 pub struct Hkdf {
@@ -234,7 +234,7 @@ impl Hkdf {
                 null_mut(),
             )
         };
-        let s = unsafe { SymKey::from_ptr(ptr).map_err(|_| HkdfError::InternalError)? };
+        let s = SymKey::from_ptr(ptr).map_err(|_| HkdfError::InternalError)?;
         Ok(s)
     }
 
@@ -277,7 +277,7 @@ impl Hkdf {
             )
         };
 
-        let prk = unsafe { SymKey::from_ptr(ptr) }.map_err(|_| HkdfError::InternalError)?;
+        let prk = SymKey::from_ptr(ptr).map_err(|_| HkdfError::InternalError)?;
         Ok(prk)
     }
 
@@ -316,7 +316,7 @@ impl Hkdf {
                 c_int::try_from(key_mech.len()).map_err(|_| HkdfError::InvalidLength)?,
             )
         };
-        let okm = unsafe { SymKey::from_ptr(ptr) }.map_err(|_| HkdfError::InternalError)?;
+        let okm = SymKey::from_ptr(ptr).map_err(|_| HkdfError::InternalError)?;
         Ok(okm)
     }
 
@@ -335,7 +335,7 @@ impl Hkdf {
                 c_int::try_from(len).map_err(|_| HkdfError::InvalidLength)?,
             )
         };
-        let k = unsafe { SymKey::from_ptr(ptr) }.map_err(|_| HkdfError::InternalError)?;
+        let k = SymKey::from_ptr(ptr).map_err(|_| HkdfError::InternalError)?;
         let r = Vec::from(k.key_data().map_err(|_| HkdfError::InternalError)?);
         Ok(r)
     }
