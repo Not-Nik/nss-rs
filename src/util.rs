@@ -8,7 +8,7 @@ use std::{
     convert::TryFrom as _, marker::PhantomData, os::raw::c_uint, ptr::null_mut, slice::Iter,
 };
 
-use crate::{nss_prelude::*, null_safe_slice, prtypes::PRBool, Res};
+use crate::{nss_prelude::*, null_safe_slice, Res};
 
 /// Implement a smart pointer for NSS objects.
 ///

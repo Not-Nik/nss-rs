@@ -8,7 +8,7 @@ use std::os::raw::{c_uint, c_void};
 
 use crate::{
     err::{secstatus_to_res, Res},
-    nss_prelude::*,
+    nss_prelude::SECStatus,
     prio::PRFileDesc,
     Epoch,
 };

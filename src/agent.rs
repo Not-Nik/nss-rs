@@ -44,10 +44,9 @@ use crate::{
     null_safe_slice,
     p11::{self, hex_with_len, PrivateKey, PublicKey},
     prio,
-    prtypes::PRBool,
     replay::AntiReplay,
     secrets::SecretHolder,
-    ssl,
+    ssl::{self, PRBool},
     time::{Time, TimeHolder},
     SECItem, SECItemArray, SECItemBorrowed, SECStatus,
 };
