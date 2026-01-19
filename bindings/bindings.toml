@@ -5,26 +5,6 @@
 # header with the types/variables/functions/enums declared for generation in
 # other headers.
 
-[nspr_types]
-types = [
-    "PRBool",
-    "PRIntn",
-    "PRInt16",
-    "PRInt32",
-    "PRInt64",
-    "PROffset32",
-    "PROffset64",
-    "PRSize",
-    "PRStatus",
-    "PRUintn",
-    "PRUint8",
-    "PRUint16",
-    "PRUint32",
-    "PRUint64",
-    "PRUword",
-]
-variables = ["PR_FALSE", "PR_TRUE"]
-
 [nss_prelude]
 types = ["SECItem", "SECItemArray", "SECItemStr", "SECStatus"]
 functions = ["SECITEM_FreeItem", "SECITEM_FreeArray"]
@@ -296,7 +276,7 @@ functions = ["PR_Close", "PR_CreateIOLayerStub", "PR_GetUniqueIdentity"]
 variables = ["PR_AF_INET"]
 # opaque is for the stuff we don't plan to use, but we need for function signatures.
 opaque = ["PRFileInfo", "PRFileInfo64", "PRFilePrivate", "PRIOVec"]
-enums = ["PRDescType", "PRSeekWhence"]
+enums = ["PRDescType", "PRStatus", "PRSeekWhence"]
 
 [nspr_time]
 types = ["PRTime"]

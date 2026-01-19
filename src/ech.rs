@@ -19,7 +19,7 @@ use crate::{
     experimental_api, null_safe_slice,
     p11::{self, PrivateKey, PublicKey, SECKEYPrivateKey, SECKEYPublicKey, Slot},
     prio::PRFileDesc,
-    prtypes::PRBool,
+    ssl::PRBool,
     SECItem, SECItemBorrowed, SECItemMut,
 };
 pub use crate::{

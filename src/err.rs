@@ -6,10 +6,7 @@
 
 use std::{os::raw::c_char, str::Utf8Error};
 
-use crate::{
-    nss_prelude::*,
-    prtypes::{PRInt32, PRUint32},
-};
+use crate::nss_prelude::*;
 
 include!(concat!(env!("OUT_DIR"), "/nspr_error.rs"));
 #[expect(non_snake_case, dead_code, reason = "Code is bindgen-generated.")]
