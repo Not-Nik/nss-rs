@@ -332,7 +332,7 @@ impl Aead {
                 null_mut(),
             )
         };
-        unsafe { SymKey::from_ptr(ptr) }
+        SymKey::from_ptr(ptr)
     }
 
     pub fn new(
@@ -353,7 +353,7 @@ impl Aead {
         };
         Ok(Self {
             mode,
-            ctx: unsafe { Context::from_ptr(ptr)? },
+            ctx: Context::from_ptr(ptr)?,
             nonce_base,
         })
     }

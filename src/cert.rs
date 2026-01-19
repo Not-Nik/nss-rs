@@ -33,7 +33,7 @@ fn peer_certificate_chain(fd: *mut PRFileDesc) -> Option<ScopedSECItemArray> {
     let mut chain_ptr: *mut SECItemArray = std::ptr::null_mut();
     let rv = unsafe { SSL_PeerCertificateChainDER(fd, &mut chain_ptr) };
     if rv.is_ok() {
-        unsafe { ScopedSECItemArray::from_ptr(chain_ptr).ok() }
+        ScopedSECItemArray::from_ptr(chain_ptr).ok()
     } else {
         None
     }

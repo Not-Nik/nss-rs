@@ -174,10 +174,10 @@ pub trait IntoResult {
     /// Unsafe in our implementors because they take a pointer and have no way
     /// to ensure that the pointer is valid. An invalid pointer could cause UB
     /// in `impl Drop for Scoped`.
-    unsafe fn into_result(self) -> Result<Self::Ok, Error>;
+    fn into_result(self) -> Result<Self::Ok, Error>;
 }
 
-pub unsafe fn into_result<P>(ptr: *mut P) -> Result<*mut P, Error> {
+pub fn into_result<P>(ptr: *mut P) -> Result<*mut P, Error> {
     if ptr.is_null() {
         Err(Error::last_nss_error())
     } else {
@@ -192,7 +192,7 @@ macro_rules! impl_into_result {
         impl $crate::err::IntoResult for *mut $pointer {
             type Ok = *mut $pointer;
 
-            unsafe fn into_result(self) -> Result<Self::Ok, $crate::err::Error> {
+            fn into_result(self) -> Result<Self::Ok, $crate::err::Error> {
                 $crate::err::into_result(self)
             }
         }
@@ -202,7 +202,7 @@ macro_rules! impl_into_result {
 impl IntoResult for SECStatus {
     type Ok = ();
 
-    unsafe fn into_result(self) -> Result<(), Error> {
+    fn into_result(self) -> Result<(), Error> {
         if self == SECSuccess {
             Ok(())
         } else {
@@ -212,8 +212,7 @@ impl IntoResult for SECStatus {
 }
 
 pub fn secstatus_to_res(code: SECStatus) -> Res<()> {
-    // Unsafe in the trait, but this impl should be safe.
-    unsafe { SECStatus::into_result(code) }
+    SECStatus::into_result(code)
 }
 
 #[cfg(test)]
