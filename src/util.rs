@@ -8,7 +8,7 @@ use std::{
     convert::TryFrom as _, marker::PhantomData, os::raw::c_uint, ptr::null_mut, slice::Iter,
 };
 
-use crate::{nss_prelude::*, null_safe_slice, Res};
+use crate::{Res, nss_prelude::*, null_safe_slice};
 
 /// Implement a smart pointer for NSS objects.
 ///
@@ -89,10 +89,12 @@ impl SECItem {
         // Note: `from_raw_parts` requires non-null `data` even for zero-length
         // slices.
         if self.len != 0 {
-            null_safe_slice(
-                self.data,
-                usize::try_from(self.len).expect("Buffer too long"),
-            )
+            unsafe {
+                null_safe_slice(
+                    self.data,
+                    usize::try_from(self.len).expect("Buffer too long"),
+                )
+            }
         } else {
             &[]
         }
@@ -100,7 +102,9 @@ impl SECItem {
 }
 
 unsafe fn destroy_secitem(item: *mut SECItem) {
-    SECITEM_FreeItem(item, PRBool::from(true));
+    unsafe {
+        SECITEM_FreeItem(item, PRBool::from(true));
+    }
 }
 scoped_ptr!(ScopedSECItem, SECItem, destroy_secitem);
 
@@ -112,16 +116,19 @@ impl ScopedSECItem {
     /// This dereferences two pointers.  It doesn't get much less safe.
     #[must_use]
     pub unsafe fn into_vec(self) -> Vec<u8> {
-        let b = self.ptr.as_ref().expect("Null pointer");
+        let b = unsafe { self.ptr.as_ref().expect("Null pointer") };
         // Sanity check the type, as some types don't count bytes in `Item::len`.
         assert_eq!(b.type_, SECItemType::siBuffer);
-        let slc = null_safe_slice(b.data, usize::try_from(b.len).expect("Buffer too long"));
+        let slc =
+            unsafe { null_safe_slice(b.data, usize::try_from(b.len).expect("Buffer too long")) };
         Vec::from(slc)
     }
 }
 
 unsafe fn destroy_secitem_array(array: *mut SECItemArray) {
-    SECITEM_FreeArray(array, PRBool::from(true));
+    unsafe {
+        SECITEM_FreeArray(array, PRBool::from(true));
+    }
 }
 scoped_ptr!(ScopedSECItemArray, SECItemArray, destroy_secitem_array);
 

@@ -9,10 +9,10 @@ use std::{convert::TryFrom as _, ptr::NonNull};
 use log::error;
 
 use crate::{
-    experimental_api, null_safe_slice,
+    SECItem, SECItemArray, ScopedSECItemArray, ScopedSECItemArrayIterator, experimental_api,
+    null_safe_slice,
     prio::PRFileDesc,
     ssl::{SSL_PeerSignedCertTimestamps, SSL_PeerStapledOCSPResponses},
-    SECItem, SECItemArray, ScopedSECItemArray, ScopedSECItemArrayIterator,
 };
 
 experimental_api!(SSL_PeerCertificateChainDER(

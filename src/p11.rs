@@ -22,7 +22,7 @@ use std::{
 use pkcs11_bindings::{CKA_EC_POINT, CKA_VALUE};
 
 use crate::{
-    err::{secstatus_to_res, Error, Res},
+    err::{Error, Res, secstatus_to_res},
     nss_prelude::SECITEM_FreeItem,
     util::SECItemMut,
 };
@@ -44,6 +44,7 @@ mod nss_p11 {
         non_snake_case,
         non_upper_case_globals,
         non_camel_case_types,
+        unsafe_op_in_unsafe_fn,
         unused_qualifications,
         clippy::all,
         clippy::nursery,
@@ -218,7 +219,9 @@ impl Default for SymKey {
 }
 
 unsafe fn destroy_pk11_context(ctxt: *mut PK11Context) {
-    PK11_DestroyContext(ctxt, PRBool::from(true));
+    unsafe {
+        PK11_DestroyContext(ctxt, PRBool::from(true));
+    }
 }
 scoped_ptr!(Context, PK11Context, destroy_pk11_context);
 
@@ -315,7 +318,7 @@ mod test {
     use test_fixture::fixture_init;
 
     use super::RandomCache;
-    use crate::{random, PrivateKey, PublicKey};
+    use crate::{PrivateKey, PublicKey, random};
 
     #[cfg(not(feature = "disable-random"))]
     #[test]

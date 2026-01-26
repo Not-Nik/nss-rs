@@ -16,7 +16,7 @@ use crate::{
     agentio::as_c_void,
     constants::Epoch,
     err::Res,
-    p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey},
+    p11::{PK11_ReferenceSymKey, PK11SymKey, SymKey},
     prio::PRFileDesc,
     ssl::{SSLSecretCallback, SSLSecretDirection},
 };
@@ -87,7 +87,7 @@ impl Secrets {
             // Don't touch secrets.
             return;
         };
-        let Some(secrets) = arg.cast::<Self>().as_mut() else {
+        let Some(secrets) = (unsafe { arg.cast::<Self>().as_mut() }) else {
             debug_assert!(false, "No secrets");
             return;
         };

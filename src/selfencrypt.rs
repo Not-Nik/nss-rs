@@ -9,12 +9,12 @@ use std::{fmt::Write as _, io::Write as _, mem};
 use log::{info, trace};
 
 use crate::{
+    Aead,
     aead::AeadTrait as _,
     constants::{Cipher, Version},
     err::{Error, Res},
     hkdf,
-    p11::{random, SymKey},
-    Aead,
+    p11::{SymKey, random},
 };
 
 #[must_use]

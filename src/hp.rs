@@ -16,16 +16,16 @@ use std::{
 use pkcs11_bindings::{CKA_ENCRYPT, CKM_AES_ECB, CKM_CHACHA20};
 
 use crate::{
-    constants::{
-        Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
-        TLS_CHACHA20_POLY1305_SHA256,
-    },
-    err::{secstatus_to_res, Error, Res},
-    p11::{
-        Context, PK11SymKey, PK11_CipherOp, PK11_CreateContextBySymKey, PK11_Encrypt,
-        PK11_GetBlockSize, SymKey, CK_ATTRIBUTE_TYPE, CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE,
-    },
     SECItemBorrowed,
+    constants::{
+        Cipher, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
+        Version,
+    },
+    err::{Error, Res, secstatus_to_res},
+    p11::{
+        CK_ATTRIBUTE_TYPE, CK_CHACHA20_PARAMS, CK_MECHANISM_TYPE, Context, PK11_CipherOp,
+        PK11_CreateContextBySymKey, PK11_Encrypt, PK11_GetBlockSize, PK11SymKey, SymKey,
+    },
 };
 
 experimental_api!(SSL_HkdfExpandLabelWithMech(

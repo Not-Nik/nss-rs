@@ -13,21 +13,21 @@ use std::{
     ptr::null_mut,
 };
 
-use pkcs11_bindings::{CKA_DERIVE, CKA_SIGN, CKM_HKDF_DERIVE, CKM_HKDF_KEY_GEN, CK_ULONG};
+use pkcs11_bindings::{CK_ULONG, CKA_DERIVE, CKA_SIGN, CKM_HKDF_DERIVE, CKM_HKDF_KEY_GEN};
 
 use crate::{
+    Error, SECItem, SECItemBorrowed, SECItemType,
     constants::{
-        Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
-        TLS_CHACHA20_POLY1305_SHA256, TLS_VERSION_1_3,
+        Cipher, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
+        TLS_VERSION_1_3, Version,
     },
     err::Res,
     p11::{
-        self, random, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKF_HKDF_SALT_DATA,
-        CKF_HKDF_SALT_NULL, CKM_HKDF_DATA, CK_ATTRIBUTE_TYPE, CK_BBOOL, CK_INVALID_HANDLE,
-        CK_MECHANISM_TYPE,
+        self, CK_ATTRIBUTE_TYPE, CK_BBOOL, CK_INVALID_HANDLE, CK_MECHANISM_TYPE,
+        CKF_HKDF_SALT_DATA, CKF_HKDF_SALT_NULL, CKM_HKDF_DATA, PK11_ImportDataKey, PK11Origin,
+        PK11SymKey, Slot, SymKey, random,
     },
     ssl::CK_OBJECT_HANDLE,
-    Error, SECItem, SECItemBorrowed, SECItemType,
 };
 
 experimental_api!(SSL_HkdfExtract(

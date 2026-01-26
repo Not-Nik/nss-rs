@@ -11,16 +11,16 @@ use std::{
 };
 
 use crate::{
+    SECItemBorrowed, SymKey,
     constants::{Cipher, Version},
-    err::{sec::SEC_ERROR_BAD_DATA, Error, Res},
+    err::{Error, Res, sec::SEC_ERROR_BAD_DATA},
     p11::{
-        self, Context, PK11SymKey, PK11_AEADOp, PK11_CreateContextBySymKey, CKA_DECRYPT,
+        self, CK_ATTRIBUTE_TYPE, CK_GENERATOR_FUNCTION, CK_MECHANISM_TYPE, CKA_DECRYPT,
         CKA_ENCRYPT, CKA_NSS_MESSAGE, CKG_GENERATE_COUNTER_XOR, CKG_NO_GENERATE, CKM_AES_GCM,
-        CKM_CHACHA20_POLY1305, CK_ATTRIBUTE_TYPE, CK_GENERATOR_FUNCTION, CK_MECHANISM_TYPE,
+        CKM_CHACHA20_POLY1305, Context, PK11_AEADOp, PK11_CreateContextBySymKey, PK11SymKey,
     },
     secstatus_to_res,
-    ssl::{PRUint16, PRUint64, PRUint8, SSLAeadContext},
-    SECItemBorrowed, SymKey,
+    ssl::{PRUint8, PRUint16, PRUint64, SSLAeadContext},
 };
 
 /// Trait for AEAD (Authenticated Encryption with Associated Data) operations.
@@ -127,14 +127,16 @@ impl RealAead {
     ) -> Res<Self> {
         let p = prefix.as_bytes();
         let mut ctx: *mut SSLAeadContext = null_mut();
-        SSL_MakeAead(
-            version,
-            cipher,
-            secret,
-            p.as_ptr().cast(),
-            c_uint::try_from(p.len())?,
-            &raw mut ctx,
-        )?;
+        unsafe {
+            SSL_MakeAead(
+                version,
+                cipher,
+                secret,
+                p.as_ptr().cast(),
+                c_uint::try_from(p.len())?,
+                &raw mut ctx,
+            )?;
+        }
         Ok(Self {
             ctx: AeadContext::from_ptr(ctx)?,
         })
@@ -432,7 +434,7 @@ impl Aead {
 mod test {
     use test_fixture::fixture_init;
 
-    use crate::aead::{Aead, AeadAlgorithms, Mode, SequenceNumber, NONCE_LEN};
+    use crate::aead::{Aead, AeadAlgorithms, Mode, NONCE_LEN, SequenceNumber};
 
     /// Check that the first invocation of encryption matches expected values.
     /// Also check decryption of the same.

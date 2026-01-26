@@ -7,10 +7,10 @@
 use std::convert::TryFrom as _;
 
 use crate::{
+    Error,
     err::IntoResult as _,
     init, p11,
     p11::{PK11_HashBuf, SECOidTag},
-    Error,
 };
 
 //

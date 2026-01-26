@@ -7,10 +7,10 @@
 use std::os::raw::{c_uint, c_void};
 
 use crate::{
-    err::{secstatus_to_res, Res},
+    Epoch,
+    err::{Res, secstatus_to_res},
     nss_prelude::SECStatus,
     prio::PRFileDesc,
-    Epoch,
 };
 
 mod nss_ssl {
@@ -19,6 +19,7 @@ mod nss_ssl {
         non_upper_case_globals,
         non_snake_case,
         nonstandard_style,
+        unsafe_op_in_unsafe_fn,
         unused_qualifications,
         clippy::all,
         clippy::nursery,

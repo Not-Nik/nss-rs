@@ -7,24 +7,24 @@
 use std::ptr;
 
 use pkcs11_bindings::{
-    CKA_VALUE, CKM_EC_EDWARDS_KEY_PAIR_GEN, CKM_EC_KEY_PAIR_GEN, CKM_EC_MONTGOMERY_KEY_PAIR_GEN,
-    CK_FALSE,
+    CK_FALSE, CKA_VALUE, CKM_EC_EDWARDS_KEY_PAIR_GEN, CKM_EC_KEY_PAIR_GEN,
+    CKM_EC_MONTGOMERY_KEY_PAIR_GEN,
 };
 
 // use std::ptr::null;
 // use std::ptr::null_mut;
 use crate::{
-    der,
-    err::{secstatus_to_res, Error, IntoResult as _},
+    PrivateKey, PublicKey, SECItem, SECItemBorrowed, der,
+    err::{Error, IntoResult as _, secstatus_to_res},
     init,
     p11::{
-        PK11ObjectType::PK11_TypePrivKey, PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPair,
+        KU_ALL, PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPair,
         PK11_ImportDERPrivateKeyInfoAndReturnKey, PK11_ImportPublicKey, PK11_PubDeriveWithKDF,
-        PK11_ReadRawAttribute, SECKEY_DecodeDERSubjectPublicKeyInfo, Slot, KU_ALL,
+        PK11_ReadRawAttribute, PK11ObjectType::PK11_TypePrivKey,
+        SECKEY_DecodeDERSubjectPublicKeyInfo, Slot,
     },
     ssl::PRBool,
     util::SECItemMut,
-    PrivateKey, PublicKey, SECItem, SECItemBorrowed,
 };
 //
 // Constants

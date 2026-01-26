@@ -11,15 +11,15 @@ use std::{convert::TryFrom as _, ptr};
 use pkcs11_bindings::CKA_SIGN;
 
 use crate::{
+    Error, SECItemBorrowed,
     err::IntoResult as _,
     hash,
     hash::HashAlgorithm,
     p11,
     p11::{
-        PK11Origin, PK11_CreateContextBySymKey, PK11_DigestFinal, PK11_DigestOp, PK11_ImportSymKey,
+        PK11_CreateContextBySymKey, PK11_DigestFinal, PK11_DigestOp, PK11_ImportSymKey, PK11Origin,
         Slot,
     },
-    Error, SECItemBorrowed,
 };
 
 //

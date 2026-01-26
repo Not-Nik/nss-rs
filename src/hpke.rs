@@ -4,20 +4,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::{
-    err::{sec::SEC_ERROR_INVALID_ARGS, secstatus_to_res, Error},
-    p11::{PrivateKey, PublicKey, Slot},
-};
-use crate::p11;
-use crate::p11::SymKey;
-use crate::PRBool;
-use crate::SECItem;
-use crate::{aead::AeadAlgorithms, err::Res, hkdf::HkdfAlgorithm};
 use std::{
     convert::TryFrom,
     ops::Deref,
     os::raw::c_uint,
     ptr::{addr_of_mut, null, null_mut},
+};
+
+use super::{
+    err::{Error, sec::SEC_ERROR_INVALID_ARGS, secstatus_to_res},
+    p11::{PrivateKey, PublicKey, Slot},
+};
+use crate::{
+    PRBool, SECItem, aead::AeadAlgorithms, err::Res, hkdf::HkdfAlgorithm, p11, p11::SymKey,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -307,7 +306,7 @@ pub fn generate_key_pair(kem: KemAlgorithm) -> Result<(PrivateKey, PublicKey), c
 
 #[cfg(test)]
 mod test {
-    use super::{generate_key_pair, Config, HpkeR, HpkeS};
+    use super::{Config, HpkeR, HpkeS, generate_key_pair};
     use crate::{hpke::Aead, init};
 
     const INFO: &[u8] = b"info";
