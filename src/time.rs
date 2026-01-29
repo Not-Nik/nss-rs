@@ -19,6 +19,7 @@ use std::{
 use once_cell::sync::OnceCell;
 
 use crate::{
+    agent::as_c_void,
     err::{Error, Res},
     prio::PRFileDesc,
     ssl::SSLTimeFunc,
@@ -175,19 +176,9 @@ impl TimeHolder {
         *p.as_ref().unwrap()
     }
 
-    #[expect(
-        clippy::not_unsafe_ptr_arg_deref,
-        clippy::ptr_as_ptr,
-        clippy::ref_as_ptr
-    )]
+    #[expect(clippy::not_unsafe_ptr_arg_deref)]
     pub fn bind(&mut self, fd: *mut PRFileDesc) -> Res<()> {
-        unsafe {
-            SSL_SetTimeFunc(
-                fd,
-                Some(Self::time_func),
-                &mut *self.t as *mut _ as *mut c_void,
-            )
-        }
+        unsafe { SSL_SetTimeFunc(fd, Some(Self::time_func), as_c_void(&mut self.t)) }
     }
 
     pub fn set(&mut self, t: Instant) -> Res<()> {

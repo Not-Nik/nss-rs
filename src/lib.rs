@@ -4,17 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::pedantic)]
-// Bindgen auto generated code
-// won't adhere to the clippy rules below
-#![allow(clippy::borrow_as_ptr)]
-#![allow(clippy::module_name_repetitions)]
-#![allow(clippy::unseparated_literal_suffix)]
-#![allow(clippy::used_underscore_binding)]
-#![allow(clippy::missing_panics_doc)]
-#![allow(clippy::missing_errors_doc)]
-#![allow(clippy::missing_safety_doc)]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(feature = "disable-encryption")]
@@ -49,7 +38,6 @@ mod ssl;
 pub mod time;
 
 use std::{
-    convert::TryFrom,
     env,
     ffi::CString,
     path::{Path, PathBuf},

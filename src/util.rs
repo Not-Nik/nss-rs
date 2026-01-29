@@ -203,7 +203,7 @@ impl Drop for SECItemMut {
         // If the second argument is true, it also frees the SECItem itself,
         // which we don't want to do, because rust owns that memory.
         unsafe {
-            SECITEM_FreeItem(&mut self.inner, PRBool::from(false));
+            SECITEM_FreeItem(&raw mut self.inner, PRBool::from(false));
         }
     }
 }
