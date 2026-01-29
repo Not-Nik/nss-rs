@@ -22,7 +22,7 @@ use crate::{
 };
 
 #[must_use]
-pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
+pub fn hex_with_len<B: AsRef<[u8]>>(buf: B) -> String {
     use std::fmt::Write as _;
     let buf = buf.as_ref();
     let mut ret = String::with_capacity(10 + buf.len() * 2);

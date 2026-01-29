@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(non_camel_case_types)]
+#![allow(non_camel_case_types, reason = "C enum naming")]
 
 use std::{
     convert::TryFrom as _,
@@ -101,7 +101,7 @@ impl<'a, T: Sized + 'a> ParamItem<'a, T> {
         })
     }
 
-    pub fn ptr(&mut self) -> *mut SECItem {
+    pub const fn ptr(&mut self) -> *mut SECItem {
         std::ptr::addr_of_mut!(self.item)
     }
 }

@@ -92,7 +92,7 @@ pub fn hmac(alg: &HmacAlgorithm, key: &[u8], data: &[u8]) -> Result<Vec<u8>, Err
         PK11_DigestFinal(
             *context,
             digest.as_mut_ptr(),
-            &mut digest_len,
+            &raw mut digest_len,
             digest.len() as u32,
         )
         .into_result()?;

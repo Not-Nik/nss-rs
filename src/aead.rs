@@ -12,13 +12,12 @@ use std::{
 use crate::{
     constants::{Cipher, Version},
     err::{sec::SEC_ERROR_BAD_DATA, Error, Res},
-    experimental_api,
     p11::{
         self, Context, PK11SymKey, PK11_AEADOp, PK11_CreateContextBySymKey, CKA_DECRYPT,
         CKA_ENCRYPT, CKA_NSS_MESSAGE, CKG_GENERATE_COUNTER_XOR, CKG_NO_GENERATE, CKM_AES_GCM,
         CKM_CHACHA20_POLY1305, CK_ATTRIBUTE_TYPE, CK_GENERATOR_FUNCTION, CK_MECHANISM_TYPE,
     },
-    scoped_ptr, secstatus_to_res,
+    secstatus_to_res,
     ssl::{PRUint16, PRUint64, PRUint8, SSLAeadContext},
     SECItemBorrowed, SymKey,
 };
@@ -374,7 +373,7 @@ impl Aead {
                 aad.as_ptr(),
                 c_int_len(aad.len())?,
                 ct.as_mut_ptr(),
-                &mut ct_len,
+                &raw mut ct_len,
                 c_int_len(ct.len())?, // signed :(
                 tag.as_mut_ptr(),
                 c_int_len(tag.len())?,
@@ -409,7 +408,7 @@ impl Aead {
                 aad.as_ptr(),
                 c_int_len(aad.len())?,
                 pt.as_mut_ptr(),
-                &mut pt_len,
+                &raw mut pt_len,
                 c_int_len(pt.len())?,
                 ct.as_ptr().add(pt_expected).cast_mut(),
                 c_int_len(TAG_LEN)?,

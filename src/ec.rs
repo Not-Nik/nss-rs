@@ -144,7 +144,7 @@ pub fn ecdh_keygen(curve: &EcCurve) -> Result<EcdhKeypair, Error> {
             *slot,
             ckm,
             oid_ptr.cast(),
-            &mut pk_ptr,
+            &raw mut pk_ptr,
             CK_FALSE.into(),
             CK_FALSE.into(),
             ptr::null_mut(),
@@ -211,7 +211,7 @@ pub fn import_ec_private_key_pkcs8(pki: &[u8]) -> Result<PrivateKey, Error> {
             0,
             0,
             KU_ALL,
-            &mut pk_ptr,
+            &raw mut pk_ptr,
             ptr::null_mut(),
         ))?;
 
