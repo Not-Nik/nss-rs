@@ -24,9 +24,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Set RUST_BACKTRACE
+      shell: bash
+      run: echo "RUST_BACKTRACE=full" >> "$GITHUB_ENV"
+
     - name: Install Rust
       # TODO: Manually upate this, Dependabot will skip it because no tags associated with SHA:
-      uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # zizmor: ignore[stale-action-refs]
+      uses: dtolnay/rust-toolchain@f7ccc83f9ed1e5b9c81d8a67d7ad1a747e22a561 # zizmor: ignore[stale-action-refs]
       with:
         toolchain: ${{ inputs.version  }}
         components: ${{ inputs.components }}
@@ -40,7 +44,7 @@ runs:
       # Also, only enable sscache on our self-hosted runner, because the GitHub cache limit
       # is too small for this to be effective there.
       if: ${{ env.SCCACHE_ENABLED != '1' && runner.environment != 'github-hosted' }}
-      uses: mozilla-actions/sccache-action@2e7f9ec7921547d4b46598398ca573513895d0bd # v0.0.4
+      uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
 
     # See https://corrode.dev/blog/tips-for-faster-ci-builds/
     - name: Set up build environment
@@ -65,15 +69,17 @@ runs:
           echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
         fi
 
+    # Enable Rust cache on GitHub-hosted runners. Minimizes cache pressure via
+    # shared-key (6 entries: 3 OS × 2 toolchains). Only saves on main for
+    # stable/MSRV; nightly changes too frequently.
     - name: Enable Rust cache
-      uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      if: ${{ runner.environment == 'github-hosted' }}
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
       with:
-        cache-bin: ${{ runner.environment != 'github-hosted' }}
-        cache-all-crates: true
-        key: ${{ inputs.targets != '' && format('{0}-', inputs.targets) || '' }}${{ runner.os }}
-        workspaces: ${{ inputs.workspaces }}
-         # Only create the cache when we push to `main` (also via a merge group).
-        save-if: ${{ github.ref == 'refs/heads/main' || github.event.merge_group.base_ref == 'refs/heads/main' }}
+        cache-bin: false  # Using binstall for tools
+        cache-all-crates: false
+        shared-key: ${{ runner.os }}-${{ inputs.version }}
+        save-if: ${{ inputs.version != 'nightly' && (github.ref == 'refs/heads/main' || github.event.merge_group.base_ref == 'refs/heads/main') }}
 
     - name: Set up MSVC (Windows)
       if: ${{ runner.os == 'Windows' }}
@@ -87,19 +93,32 @@ runs:
       if: ${{ runner.os == 'Windows' }}
       run: rm /usr/bin/link.exe || true
 
+    # Use cargo-binstall for faster tool installation via pre-built binaries.
+    # Previously disabled due to: (1) binstall MSRV was too high, and (2) macOS issues.
+    # Both resolved: binstall MSRV is currently 1.79.0 (below ours), and macOS issues
+    # were fixed in late 2024/2025 (cargo-bins/cargo-binstall#1953, #2049).
     - name: Install Rust tools
       shell: bash
       if: ${{ inputs.tools != '' }}
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
         TOOLS: ${{ inputs.tools }}
+        RUNNER_OS: ${{ runner.os }}
       run: |
+        curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+
         for tool in $(echo $TOOLS | tr -d ","); do
           if [ "$tool" == "samply" ]; then
             # TODO: Install released version once `--presymbolicate` (https://github.com/mstange/samply/pull/634) is released.
             cargo install --git https://github.com/mstange/samply --rev f6ff5dedc73ab84a8ef45231f41cd3e721fb5cd4 samply
+          elif [ "$RUNNER_OS" != "Linux" ] && [ "$tool" == "cargo-careful" ]; then
+            # TODO: There is an issue with the binary releases of cargo-careful for non-Linux platforms.
+            cargo install cargo-careful
+          elif [ "$tool" == "cargo-fuzz" ]; then
+            # cargo-fuzz must be compiled with the same nightly toolchain used for fuzzing.
+            cargo install cargo-fuzz
           else
-            # FIXME: See https://github.com/Swatinem/rust-cache/issues/204 for why `--force`.
-            cargo install --locked --force "$tool"
+            # Use binstall for pre-built binaries; fall back to cargo install if unavailable.
+            cargo binstall --no-confirm "$tool" || cargo install --locked "$tool"
           fi
         done

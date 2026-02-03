@@ -1,7 +1,5 @@
 name: Sanitize
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
   merge_group:
@@ -10,7 +8,7 @@ env:
   DUMP_SIMULATION_SEEDS: /tmp/simulation-seeds
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -23,7 +21,6 @@ defaults:
 jobs:
   sanitize:
     name: Sanitize
-    if: github.actor != 'dependabot[bot]'
     strategy:
       fail-fast: false
       matrix:
@@ -38,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -77,17 +74,17 @@ jobs:
             {
               echo "leak:dyld4::RuntimeState"
               echo "leak:fetchInitializingClassList"
-              echo "leak:std::rt::lang_start_internal"
+              echo "leak:lang_start_internal"
             } > suppressions.txt
             PWD=$(pwd)
             export LSAN_OPTIONS="suppressions=$PWD/suppressions.txt"
           fi
-          cargo test --locked -Z build-std --target "$TARGET"
+          cargo test --locked -Z build-std --features ci --target "$TARGET"
           cargo hack --workspace test --locked -Z build-std --target "$TARGET"
 
       - name: Save simulation seeds artifact
         if: ${{ env.DUMP_SIMULATION_SEEDS }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: simulation-seeds-${{ matrix.os }}-sanitizer-${{ matrix.sanitizer }}
           path: ${{ env.DUMP_SIMULATION_SEEDS }}
