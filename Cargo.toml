@@ -5,7 +5,7 @@ authors = ["Martin Thomson <mt@lowentropy.net>", "Andy Leiserson <aleiserson@moz
 categories = ["network-programming", "web-programming"]
 keywords = ["nss", "crypto", "mozilla", "firefox"]
 edition = "2024"
-rust-version = "1.87.0"
+rust-version = "1.90.0"
 build = "build.rs"
 license = "MIT/Apache-2.0"
 description = "Gecko API for NSS"
@@ -26,9 +26,9 @@ windows = { version = ">=0.60,<0.63", features = ["Win32_Security_Authentication
 [build-dependencies]
 bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
 mozbuild = { version = "0.1", default-features = false, optional = true }
-semver = { version = "1.0", default-features = false, features = ["std"] }
-serde = { version = "1.0", default-features = false, features = ["std"] }
-serde_derive = { version = "1.0", default-features = false }
+semver = { version = "1", default-features = false, features = ["std"] }
+serde = { version = "1", default-features = false, features = ["std"] }
+serde_derive = { version = "1", default-features = false }
 toml = { version = "0.9", default-features = false, features = ["parse", "serde"] }
 
 [dev-dependencies]
