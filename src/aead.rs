@@ -5,6 +5,7 @@
 // except according to those terms.
 
 use std::{
+    fmt,
     os::raw::{c_char, c_int, c_uint},
     ptr::null_mut,
 };
@@ -113,8 +114,6 @@ experimental_api!(SSL_AeadDecrypt(
 experimental_api!(SSL_DestroyAead(ctx: *mut SSLAeadContext));
 scoped_ptr!(AeadContext, SSLAeadContext, SSL_DestroyAead);
 
-#[derive(derive_more::Debug)]
-#[debug("[AEAD Context]")]
 pub struct RealAead {
     ctx: AeadContext,
 }
@@ -246,6 +245,12 @@ impl AeadTrait for RealAead {
         }?;
         debug_assert_eq!(usize::try_from(l)?, data.len() - self.expansion());
         Ok(l.try_into()?)
+    }
+}
+
+impl fmt::Debug for RealAead {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[AEAD Context]")
     }
 }
 
