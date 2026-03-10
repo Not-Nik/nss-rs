@@ -387,14 +387,16 @@ fn setup_standalone(nss_dir: String) -> Vec<String> {
 
     let nss = PathBuf::from(nss_dir);
     println!("cargo:rerun-if-env-changed={}", nss.display());
+    println!("cargo:rerun-if-env-changed=NSS_PREBUILT");
 
     // $NSS_DIR/../dist/
     let nssdist = nss.parent().unwrap().join("dist");
     println!("cargo:rerun-if-env-changed={}", nssdist.display());
     let nsstarget = "Release";
 
-    // If NSS_PREBUILT is set, we assume that the NSS libraries are already built.
-    if env::var("NSS_PREBUILT").is_err() {
+    // If NSS_PREBUILT is set to a non-zero value, we assume that the NSS libraries are already
+    // built.
+    if !env::var("NSS_PREBUILT").is_ok_and(|v| v != "0") {
         build_nss(nss);
     }
 
