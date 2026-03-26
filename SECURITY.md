@@ -4,7 +4,7 @@ This document describes how security vulnerabilities in this project should be r
 
 ## Reporting a Vulnerability
 
-To report a security problem with neqo, create a bug in Mozilla's Bugzilla instance in the [Core :: Networking](https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Networking) component.
+To report a security problem with nss-rs, create a bug in Mozilla's Bugzilla instance in the [Core :: Networking](https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Networking) component.
 
 **IMPORTANT: For security issues, please make sure that you check the box labelled "Many users could be harmed by this security problem".**
 We advise that you check this option for anything that involves anything security-relevant, including memory safety, crashes, race conditions, and handling of confidential information.
