@@ -15,7 +15,7 @@ use std::{
     cell::RefCell,
     convert::TryFrom as _,
     fmt::{self, Debug, Formatter},
-    os::raw::c_uint,
+    os::raw::{c_int, c_uint},
     ptr::null_mut,
 };
 
@@ -174,6 +174,96 @@ impl Slot {
     pub fn internal() -> Res<Self> {
         unsafe { Self::from_ptr(PK11_GetInternalSlot()) }
     }
+
+    pub fn internal_key_slot() -> Res<Self> {
+        unsafe { Self::from_ptr(PK11_GetInternalKeySlot()) }
+    }
+
+    #[must_use]
+    pub fn token_name(&self) -> String {
+        let name = unsafe { PK11_GetTokenName(self.ptr) };
+        if name.is_null() {
+            return String::new();
+        }
+        unsafe { std::ffi::CStr::from_ptr(name) }
+            .to_string_lossy()
+            .into_owned()
+    }
+
+    pub fn authenticate(&self) -> Res<()> {
+        secstatus_to_res(unsafe { PK11_Authenticate(self.ptr, PRBool::from(true), null_mut()) })
+    }
+
+    /// Find a persistent symmetric key on this slot by nickname.
+    /// Returns `None` if no key with the given nickname exists.
+    #[must_use]
+    pub fn find_key_by_nickname(&self, nickname: &str) -> Option<SymKey> {
+        let c_nickname = std::ffi::CString::new(nickname).ok()?;
+        let ptr = unsafe {
+            PK11_ListFixedKeysInSlot(self.ptr, c_nickname.as_ptr().cast_mut(), null_mut())
+        };
+        if ptr.is_null() {
+            None
+        } else {
+            SymKey::from_ptr(ptr).ok()
+        }
+    }
+
+    /// Generate a persistent symmetric key on this slot with a nickname.
+    pub fn generate_token_key(
+        &self,
+        mechanism: CK_MECHANISM_TYPE,
+        key_size: usize,
+        nickname: &str,
+    ) -> Res<SymKey> {
+        let key = unsafe {
+            SymKey::from_ptr(PK11_TokenKeyGenWithFlags(
+                self.ptr,
+                mechanism,
+                null_mut(),
+                c_int::try_from(key_size).map_err(|_| Error::IntegerOverflow)?,
+                null_mut(),
+                CK_FLAGS::from(CKF_ENCRYPT | CKF_DECRYPT),
+                PK11AttrFlags::from(PK11_ATTR_TOKEN | PK11_ATTR_PRIVATE | PK11_ATTR_SENSITIVE),
+                null_mut(),
+            ))
+        }?;
+        let c_nickname = std::ffi::CString::new(nickname).map_err(|_| Error::InvalidInput)?;
+        secstatus_to_res(unsafe { PK11_SetSymKeyNickname(*key, c_nickname.as_ptr()) })?;
+        Ok(key)
+    }
+}
+
+/// Returns all available token slots for the given mechanism.
+#[must_use]
+pub fn all_token_slots(mechanism: CK_MECHANISM_TYPE) -> Vec<Slot> {
+    let list = unsafe {
+        PK11_GetAllTokens(
+            mechanism,
+            PRBool::from(false),
+            PRBool::from(false),
+            null_mut(),
+        )
+    };
+    if list.is_null() {
+        return Vec::new();
+    }
+    let mut result = Vec::new();
+    unsafe {
+        let mut elem = (*list).head;
+        while !elem.is_null() {
+            let slot_ptr = (*elem).slot;
+            if !slot_ptr.is_null() {
+                PK11_ReferenceSlot(slot_ptr);
+                if let Ok(slot) = Slot::from_ptr(slot_ptr) {
+                    result.push(slot);
+                }
+            }
+            elem = (*elem).next;
+        }
+        PK11_FreeSlotList(list);
+    }
+    result
 }
 
 // Note: PK11SymKey is internally reference counted
@@ -249,7 +339,7 @@ pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
 #[cfg(not(feature = "disable-random"))]
 pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
     let m_buf = buf.as_mut();
-    let len = std::os::raw::c_int::try_from(m_buf.len()).expect("usize fits into c_int");
+    let len = c_int::try_from(m_buf.len()).expect("usize fits into c_int");
     secstatus_to_res(unsafe { PK11_GenerateRandom(m_buf.as_mut_ptr(), len) }).expect("NSS failed");
     buf
 }
