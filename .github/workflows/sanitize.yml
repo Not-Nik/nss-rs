@@ -1,7 +1,6 @@
 name: Sanitize
 on:
   pull_request:
-    branches: ["main"]
   merge_group:
   workflow_dispatch:
 env:
@@ -39,19 +38,17 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/rust
+      - uses: mozilla/actions/rust@b6b1031d2072eb8c2b181887cb5e194ebcc5caab # v1.0.4
         with:
           version: nightly
           components: rust-src
           tools: cargo-hack
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: nss-version
-        run: echo "minimum=$(cat min_version.txt)" >> "$GITHUB_OUTPUT"
-
-      - uses: ./.github/actions/nss
+      - uses: mozilla/actions/nss@b6b1031d2072eb8c2b181887cb5e194ebcc5caab # v1.0.4
         with:
-          minimum-version: ${{ steps.nss-version.outputs.minimum }}
+          version-file: min_version.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests with sanitizers
         env:
@@ -84,7 +81,7 @@ jobs:
 
       - name: Save simulation seeds artifact
         if: ${{ env.DUMP_SIMULATION_SEEDS }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: simulation-seeds-${{ matrix.os }}-sanitizer-${{ matrix.sanitizer }}
           path: ${{ env.DUMP_SIMULATION_SEEDS }}
