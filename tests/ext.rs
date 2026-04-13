@@ -7,7 +7,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use handshake::forward_records;
-use nss_rs::{
+use nss::{
     AuthenticationStatus, Client, Error, HandshakeState, Server,
     constants::{HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS},
     ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult},

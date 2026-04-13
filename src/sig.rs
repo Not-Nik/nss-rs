@@ -21,7 +21,7 @@
 
 // use crate::Result;
 use nss::ec::{Curve, PublicKey};
-use nss_rs::HashAlgorithm;
+use nss::HashAlgorithm;
 
 /// A signature verification algorithm.
 pub struct SignatureAlgorithm {
