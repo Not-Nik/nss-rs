@@ -159,7 +159,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nss"
+name = "nss-rs"
 version = "0.8.0"
 dependencies = [
  "bindgen",
@@ -333,7 +333,7 @@ name = "test-fixture"
 version = "0.1.0"
 dependencies = [
  "log",
- "nss",
+ "nss-rs",
 ]
 
 [[package]]
