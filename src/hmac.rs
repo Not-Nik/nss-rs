@@ -14,7 +14,10 @@ use crate::{
     Error, SECItemBorrowed,
     err::IntoResult as _,
     hash::{self, HashAlgorithm},
-    p11::{self, PK11_CreateContextBySymKey, PK11_DigestFinal, PK11_DigestOp, PK11_ImportSymKey, PK11Origin, SECOidTag, Slot},
+    p11::{
+        self, PK11_CreateContextBySymKey, PK11_DigestFinal, PK11_DigestOp, PK11_ImportSymKey,
+        PK11Origin, SECOidTag, Slot,
+    },
 };
 
 //

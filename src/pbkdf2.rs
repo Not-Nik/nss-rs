@@ -7,10 +7,12 @@
 use std::{os::raw::c_int, ptr::null_mut};
 
 use crate::{
-    Error, SECItemBorrowed, hmac::{HmacAlgorithm, hmac_alg_to_prf_oid}, p11::{
+    Error, SECItemBorrowed,
+    hmac::{HmacAlgorithm, hmac_alg_to_prf_oid},
+    p11::{
         PK11_CreatePBEV2AlgorithmID, PK11_PBEKeyGen, PRBool, SECOID_DestroyAlgorithmID, SECOidTag,
         Slot, SymKey,
-    }
+    },
 };
 
 /// Derive a key using PBKDF2.
@@ -34,6 +36,9 @@ pub fn pbkdf2(
 
     let mut salt_item = SECItemBorrowed::wrap(salt)?;
 
+    let slot = Slot::internal()?;
+    let mut pw_item = SECItemBorrowed::wrap(password)?;
+
     let algid = unsafe {
         PK11_CreatePBEV2AlgorithmID(
             SECOidTag::SEC_OID_PKCS5_PBKDF2,
@@ -48,8 +53,6 @@ pub fn pbkdf2(
         return Err(Error::last_nss_error());
     }
 
-    let slot = Slot::internal()?;
-    let mut pw_item = SECItemBorrowed::wrap(password)?;
     let key_ptr = unsafe {
         PK11_PBEKeyGen(
             *slot,
@@ -73,9 +76,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rfc_6070_vector_1() {
-        // RFC 6070 defines PBKDF2-HMAC-SHA1 test vectors; RFC 7914 §11 / many
-        // references provide PBKDF2-HMAC-SHA256 vectors. Using a common one:
+    fn rfc_7914_vector_1() {
+        // RFC 7914 §11 provides PBKDF2-HMAC-SHA256 vectors. Using a common one:
         // password="password", salt="salt", iter=1, dkLen=32.
         let dk = pbkdf2(&HmacAlgorithm::HMAC_SHA2_256, b"password", b"salt", 1, 32).unwrap();
         let expected = [
@@ -99,15 +101,43 @@ mod tests {
 
     #[test]
     fn deterministic_across_calls() {
-        let a = pbkdf2(&HmacAlgorithm::HMAC_SHA2_256, b"hello", b"saltysalt0000000", 10_000, 32).unwrap();
-        let b = pbkdf2(&HmacAlgorithm::HMAC_SHA2_256, b"hello", b"saltysalt0000000", 10_000, 32).unwrap();
+        let a = pbkdf2(
+            &HmacAlgorithm::HMAC_SHA2_256,
+            b"hello",
+            b"saltysalt0000000",
+            10_000,
+            32,
+        )
+        .unwrap();
+        let b = pbkdf2(
+            &HmacAlgorithm::HMAC_SHA2_256,
+            b"hello",
+            b"saltysalt0000000",
+            10_000,
+            32,
+        )
+        .unwrap();
         assert_eq!(a, b);
     }
 
     #[test]
     fn different_salt_different_key() {
-        let a = pbkdf2(&HmacAlgorithm::HMAC_SHA2_256, b"hello", b"saltysalt0000000", 10_000, 32).unwrap();
-        let b = pbkdf2(&HmacAlgorithm::HMAC_SHA2_256, b"hello", b"saltysalt0000001", 10_000, 32).unwrap();
+        let a = pbkdf2(
+            &HmacAlgorithm::HMAC_SHA2_256,
+            b"hello",
+            b"saltysalt0000000",
+            10_000,
+            32,
+        )
+        .unwrap();
+        let b = pbkdf2(
+            &HmacAlgorithm::HMAC_SHA2_256,
+            b"hello",
+            b"saltysalt0000001",
+            10_000,
+            32,
+        )
+        .unwrap();
         assert_ne!(a, b);
     }
 }
