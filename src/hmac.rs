@@ -50,7 +50,7 @@ pub const fn hmac_alg_to_hash_alg(alg: &HmacAlgorithm) -> HashAlgorithm {
 }
 
 #[must_use]
-pub const fn hmac_alg_to_prf_oid(alg: &HmacAlgorithm) -> SECOidTag::Type {
+pub(crate) const fn hmac_alg_to_prf_oid(alg: &HmacAlgorithm) -> SECOidTag::Type {
     match alg {
         HmacAlgorithm::HMAC_SHA2_256 => SECOidTag::SEC_OID_HMAC_SHA256,
         HmacAlgorithm::HMAC_SHA2_384 => SECOidTag::SEC_OID_HMAC_SHA384,
