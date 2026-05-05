@@ -13,13 +13,8 @@ use pkcs11_bindings::CKA_SIGN;
 use crate::{
     Error, SECItemBorrowed,
     err::IntoResult as _,
-    hash,
-    hash::HashAlgorithm,
-    p11,
-    p11::{
-        PK11_CreateContextBySymKey, PK11_DigestFinal, PK11_DigestOp, PK11_ImportSymKey, PK11Origin,
-        Slot,
-    },
+    hash::{self, HashAlgorithm},
+    p11::{self, PK11_CreateContextBySymKey, PK11_DigestFinal, PK11_DigestOp, PK11_ImportSymKey, PK11Origin, SECOidTag, Slot},
 };
 
 //
@@ -48,6 +43,14 @@ pub const fn hmac_alg_to_hash_alg(alg: &HmacAlgorithm) -> HashAlgorithm {
         HmacAlgorithm::HMAC_SHA2_256 => HashAlgorithm::SHA2_256,
         HmacAlgorithm::HMAC_SHA2_384 => HashAlgorithm::SHA2_384,
         HmacAlgorithm::HMAC_SHA2_512 => HashAlgorithm::SHA2_512,
+    }
+}
+
+pub const fn hmac_alg_to_prf_oid(alg: &HmacAlgorithm) -> SECOidTag::Type {
+    match alg {
+        HmacAlgorithm::HMAC_SHA2_256 => SECOidTag::SEC_OID_HMAC_SHA256,
+        HmacAlgorithm::HMAC_SHA2_384 => SECOidTag::SEC_OID_HMAC_SHA384,
+        HmacAlgorithm::HMAC_SHA2_512 => SECOidTag::SEC_OID_HMAC_SHA512,
     }
 }
 
