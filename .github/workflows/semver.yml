@@ -25,18 +25,16 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: mozilla/actions/rust@25cb84d060946c0ad6d2c3f79da479b16d180d71 # v1.1.0
-        with:
-          tools: cargo-semver-checks
-          token: ${{ github.token }}
+      - name: Get latest tag
+        id: tag
+        run: |
+          echo "ref=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
 
       - uses: mozilla/actions/nss@25cb84d060946c0ad6d2c3f79da479b16d180d71 # v1.1.0
         with:
           version-file: min_version.txt
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check semver
-        run: |
-          LATEST_TAG_COMMIT=$(git rev-list --tags --max-count=1)
-          # shellcheck disable=SC2086
-          cargo semver-checks --default-features --baseline-rev "$LATEST_TAG_COMMIT"
+      - uses: mozilla/actions/semver@b179863eaeacb7344a9dd1c9076917787fb453a0
+        with:
+          base-ref: ${{ steps.tag.outputs.ref }}
