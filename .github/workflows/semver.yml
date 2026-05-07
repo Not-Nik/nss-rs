@@ -23,12 +23,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          fetch-depth: 0
+          fetch-depth: 1
+          fetch-tags: true
+          sparse-checkout: min_version.txt
+          sparse-checkout-cone-mode: false
 
       - name: Get latest tag
         id: tag
         run: |
-          echo "ref=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+          echo "ref=$(git tag --sort=-creatordate | head -n 1)" >> "$GITHUB_OUTPUT"
 
       - uses: mozilla/actions/nss@25cb84d060946c0ad6d2c3f79da479b16d180d71 # v1.1.0
         with:
