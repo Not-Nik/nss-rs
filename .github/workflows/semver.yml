@@ -35,6 +35,6 @@ jobs:
           version-file: min_version.txt
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: mozilla/actions/semver@b179863eaeacb7344a9dd1c9076917787fb453a0
+      - uses: mozilla/actions/semver@f82cc5accfa16039906001520788dfed0b857d03
         with:
           base-ref: ${{ steps.tag.outputs.ref }}
